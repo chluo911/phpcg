@@ -1,0 +1,1 @@
+run run.sh to get CPG of an application

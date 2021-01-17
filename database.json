@@ -1,0 +1,2110 @@
+{
+	"3f/pygmentize": [
+		{
+			"version": "<1.2",
+			"title": "Remote Code Execution",
+			"link": "https://github.com/dedalozzo/pygmentize/issues/1",
+			"location": [
+				{
+					"Function": "Pygmentize\\Pygmentize::highlight"
+				}
+			] 
+		}
+	],
+	"adodb/adodb-php": [
+		{
+			"title": "Potential SQL injection vector",
+			"link": "https://github.com/ADOdb/ADOdb/pull/401",
+			"versions": "<5.20.12",
+			"location": [
+				{
+					"Function": "ADODB_mysqli::SelectLimit"
+				}
+			] 
+		}
+	],
+	"alterphp/easyadmin-extension-bundle": [
+		{
+			"version": "<1.3.1&&>=1.3||>=1.2&&<1.2.11",
+			"title": "Action case insensitivity in authorization",
+			"link": "https://github.com/alterphp/EasyAdminExtensionBundle/releases/tag/v1.3.1",
+			"location": [
+				{
+					"Function": "AlterPHP\\EasyAdminExtensionBundle\\Security\\AdminAuthorizationChecker::getRequiredRole"
+				}
+			],
+			"advice": "Upgrade to v1.3.1 and there should no incompatibilities"
+		}
+	],
+	"amphp/artax": [
+		{
+			"version": "<2.0.6&&>=2||<1.0.6",
+			"title": "Cookie leakage to wrong origins and non-restricted cookie acceptance",
+			"link": "https://github.com/amphp/artax/releases/tag/v2.0.6",
+			"location": [
+				{
+					"Function": "Amp\\Artax\\Client::storeResponseCookie"
+				}
+			] 
+		},
+		{
+			"version": "<2.0.4&&>=2||>0.7.1&&<1.0.4",
+			"title": "HTTP Proxy header vulnerability",
+			"link": "https://twitter.com/asyncphp/status/755136084917583872",
+			"CVE": "CVE-2016-5385",
+			"location": [
+				{
+					"Function": "Amp\\Artax\\HttpSocketPool::autoDetectProxySettings"
+				}
+			] 
+		}
+	],
+	"amphp/http": [
+		{
+			"version": ">=2.2&&<2.2.10||>=2.3&&<2.3.6",
+			"title": "Access control bypass in GraphQL mutations",
+			"link": "https://github.com/api-platform/core/pull/2441",
+			"CVE": "CVE-2019-1000011",
+			"location": [
+				{
+					"Function": "ApiPlatform\\Core\\GraphQl\\Resolver\\Factory\\ItemMutationResolverFactory::__invoke"
+				}
+			] 
+		}
+	],
+	"asymmetricrypt/asymmetricrypt":[
+		{
+			"version": ">=0&&<9.9.99",
+			"title": " Padding Oracle Vulnerability in RSA Encryption",
+			"link": "https://github.com/Cosmicist/AsymmetriCrypt/issues/4",
+			"location": [
+				{
+					"Function": "AsymmetriCrypt\\Crypter::decrypt"
+				}
+			],
+			"advice": "This vulnerability is not solved now, you may need to use another alternative tool if it is necessary, or remove this buggy code if you think the related functionalities are not important."
+		}
+	],
+	"aws/aws-sdk-php":[
+		{
+			"version": ">=3&&<3.2.1",
+			"title": " Security Misconfiguration Vulnerability in the AWS SDK for PHP",
+			"link": "https://github.com/aws/aws-sdk-php/releases/tag/3.2.1",
+			"location": [
+				{
+					"Function": "Aws\\JsonCompiler::__construct"
+				}
+			],
+			"CVE": "CVE-2015-5723"
+		}
+	],
+	"brightlocal/phpwhois":[
+		{
+			"version": "<=4.2.5",
+			"title": "PHP Code Injection",
+			"link": "https://github.com/sbaresearch/advisories/tree/public/2018/SBA-ADV-20180425-01_phpWhois_Code_Execution",
+			"location": [
+				{
+					"Function": "generic_parser_b"
+				}
+			], 
+			"CVE": "CVE-2015-5243"
+		}
+	],
+	"bugsnag/bugsnag-laravel":[
+		{
+			"version": ">=2&&<2.0.2",
+			"title": "HTTP Proxy header vulnerability",
+			"link": "https://github.com/bugsnag/bugsnag-laravel/releases/tag/v2.0.2",
+			"location": [
+				{
+					"Function": "Bugsnag\\BugsnagLaravel\\BugsnagServiceProvider::register"
+				}
+			],
+			"CVE": "CVE-2016-5385"
+		}
+	],
+	"cakephp/cakephp": [
+		{
+			"version": "<2.4.8&&>=2||>=1.3&&<1.3.18",
+			"title": "SecurityComponent cross form submission issue",
+			"link": " https://bakery.cakephp.org/2014/04/29/CakePHP-1-3-18-and-2-4-8-released.html",
+			"location": [
+				{
+					"Function": "SecurityComponent::_validatePost"
+				}
+			] 
+		},
+		{
+			"version": ">=3&&<3.0.4",
+			"title": "Incorrect CSRF validation",
+			"link": "https://bakery.cakephp.org/2015/05/07/cakephp_3_0_4_released.html",
+			"location": [
+				{
+					"Function": "Cake\\Controller\\Component\\CsrfComponent::_validateToken"
+				}
+			] 
+		},
+		{
+			"version": ">=3&&<3.0.6||>=2&&<2.6.6",
+			"title": "Denial of Service attack through XML payloads",
+			"link": "https://bakery.cakephp.org/2015/05/28/cakephp_2_6_6_and_3_0_6_released.html",
+			"location": [
+				{
+					"Function":[
+						"Cake\\Controller\\Component\\RequestHandlerComponent::convertXml",
+						"RequestHandlerComponent::convertXml"
+					]
+				}
+			] 
+		},
+		{
+			"version": "<2.6.11&&>=2||>=2.7&&<2.7.2",
+			"title": "Direct access of prefixed controller actions",
+			"link": "https://bakery.cakephp.org/2015/08/06/cakephp_2_5_9_2_6_10_2_7_2_released.html",
+			"location": [
+				{
+					"Function":[
+						"Controller::convertXml",
+						"RequestHandlerComponent::_isPrivateAction"
+					]
+				}
+			] 
+		},
+		{
+			"version": "<2.6.12&&>=2||>=2.7&&<2.7.6||>=3&&<3.0.15||>=3.1&&<3.1.4",
+			"title": "Remote File Inclusion through View template name manipulation",
+			"link": "https://bakery.cakephp.org/2015/11/05/cakephp_3015_314_2612_276_released.ht",
+			"location": [
+				{
+					"Function":[
+						"Cake\\View\\View::_getViewFileName",
+						"View::_getViewFileName"
+					]
+				}
+			] 
+		},
+		{
+			"version": ">=3&&<3.5.18||>=3.6&&<3.6.15||>=3.7&&<3.7.7",
+			"title": "Unsafe deserialization in SmtpTransport",
+			"link": "ttps://bakery.cakephp.org/2019/04/23/cakephp_377_3615_3518_released.html",
+			"CVE": "CVE-2019-11458",
+			"location": [
+				{
+					"Function":[
+						"Cake\\Mailer\\Transport\\SmtpTransport::__destruct",
+						"View::_getViewFileName"
+					]
+				}
+			] 
+		}
+	],
+	"cartalyst/sentry": [
+		{
+			"version": "<=2.1.6",
+			"title": "Null reset codes were allowed, sending a password reset request with the URL NULL character (%00) will reset user's password",
+			"link": "https://haxx.ml/post/149975211631/how-i-hacked-your-cfp-and-probably-some-other",
+			"location": [
+				{
+					"Function": [
+						"Cartalyst\\Sentry\\Users\\Kohana\\User::checkResetPasswordCode",
+						"Cartalyst\\Sentry\\Users\\Eloquent\\User::checkResetPasswordCode"
+					]
+				}
+			] 
+		}
+	],
+	"codeigniter/framework":[
+		{
+			"version": "<3.0.3",
+			"title": "XSS attack vector in Security Library method xss_clean()",
+			"link": "https://www.codeigniter.com/user_guide/changelog.html#version-3-0-3",
+			"location": [
+				{
+					"Function": [
+						"CI_Security::xss_clean",
+					]
+				}
+			] 
+		}
+	],
+	"contao/core-bundle":[
+		{
+			"version": ">=4&&<4.4.8",
+			"title": "SQL injection vulnerabililty in the back end search filter",
+			"link": "https://contao.org/en/news/contao-4_4_8.html",
+			"location": [
+				{
+					"Function": [
+						"Contao\\DC_Table::searchMenu",
+					]
+				}
+			],
+			"CVE": "CVE-2017-16558"
+		},
+		{
+			"version": ">=4&&<4.4.18||>=4.5&&<4.5.8",
+			"title": "Cross-site scripting (XSS) vulnerability in the system log of the back end",
+			"link": "https://contao.org/en/news/contao-4_4_18.html",
+			"location": [
+				{
+					"Function": [
+						"Contao\\CoreBundle\\Monolog\\ContaoTableHandler::write",
+						"Contao\\DC_Table::show"
+					]
+				}
+			],
+			"CVE": "CVE-2018-10125"
+		},
+		{
+			"version": ">=4&&<4.4.37||>=4.5&&<4.7.3",
+			"title": "Existing sessions are not correctly invalidated when a user changes their password",
+			"link": "https://contao.org/en/news/contao-4_4_18.html",
+			"location": [
+				{
+					"Function": [
+						"tl_member::setNewPassword",
+						"Contao\\ModuleChangePassword::compile",
+						"Contao\\ModulePassword::setNewPassword"
+					]
+				}
+			],
+			"CVE": "CVE-2019-10641"
+		},
+		{
+			"version": ">=4.7&&<4.7.3",
+			"title": "The CSRF token check can be bypassed",
+			"link": "https://contao.org/en/news/security-vulnerability-cve-2019-10642.html",
+			"location": [
+				{
+					"Function": [
+						"Contao\\CoreBundle\\Framework\\ContaoFramework::canSkipTokenCheck",
+					]
+				}
+			],
+			"CVE": "CVE-2019-10642"
+		},
+		{
+			"version": ">=4.7&&<4.7.3",
+			"title": "Confirming an opt-in token does not invalidate previous opt-in tokens",
+			"link": "https://contao.org/en/news/security-vulnerability-cve-2019-10643.html",
+			"location": [
+				{
+					"Function": [
+						"Contao\\CoreBundle\\OptIn\\OptInToken::confirm",
+					]
+				}
+			],
+			"CVE": "CVE-2019-10643"
+		},
+		{
+			"version": ">=4.1&&<4.4.39||>=4.5&&<4.7.5",
+			"title": "SQL injection vulnerabililty in the file manager search filter",
+			"link": "https://contao.org/en/news/security-vulnerability-cve-2019-11512.html",
+			"location": [
+				{
+					"Function": [
+						"Contao\\DC_Folder::searchMenu",
+					]
+				}
+			],
+			"CVE": "CVE-2019-11512"
+		}
+	],
+	"contao/core":[
+		{
+			"version": ">=2&&<2.11.16||>=3&&<3.2.7",
+			"title": "PHP object injection vulnerability allows for arbitrary code execution",
+			"link": "https://contao.org/en/news/major-security-hole-found-in-contao.html",
+			"location": [
+				{
+					"Function": [
+						"InstallTool::adjustDatabaseTables",
+						"Contao\\DC_Folder::__construct",
+						"Contao\\DC_Folder::editAll",
+						"Contao\\DC_Table::__construct",
+						"Contao\\DC_Table::editAll",
+						"Contao\\DC_Table::overrideAll",
+						"Contao\\FormCheckBox::validate",
+						"Contao\\FormSelectMenu::validate",
+						"Contao\\Widget::validate",
+						"Contao\\CheckBox::validate",
+						"Contao\\CheckBoxWizard::validate",
+						"Contao\\KeyValueWizard::validate",
+						"Contao\\OptionWizard::validate",
+						"Contao\\RadioButton::validate",
+						"Contao\\RadioTable::validate",
+						"Contao\\SelectMenu::validate",
+						"RepositoryManager::update"
+					]
+				}
+			] 
+		},
+		{
+			"version": ">=2&&<3||>=3&&<<3.4.4",
+			"title": "A directory traversal vulnerability allows back end users to view files outside their document root",
+			"link": "https://contao.org/en/news/directory-traversal-vulnerability-cve-2015-0269.html",
+			"location": [
+				{
+					"Function": [
+						"Contao\\Backend::addPagesBreadcrumb",
+						"Contao\\Backend::addFilesBreadcrumb",
+						"tl_templates::addBreadcrumb",
+					]
+				}
+			],
+			"CVE": "CVE-2015-0269"
+		},
+		{
+			"version": ">=3&&<3.5.31",
+			"title": "SQL injection vulnerabililty",
+			"link": "https://contao.org/en/news/contao-3_5_31.html",
+			"location": [
+				{
+					"Function": [
+						"Contao\\DC_Table::searchMenu",
+						"Contao\\ModuleListing::compile"
+					]
+				}
+			],
+			"CVE": "CVE-2017-16558"
+		},
+		{
+			"version": ">=3&&<3.5.35",
+			"title": "Cross-site scripting (XSS) vulnerability",
+			"link": "https://contao.org/en/news/contao-3_5_35.html",
+			"location": [
+				{
+					"Function": [
+						"Contao\\DC_Table::show",
+						"Contao\\System::log"
+					]
+				}
+			],
+			"CVE": "CVE-2018-10125"
+		},
+		{
+			"version": ">=3&&<3.5.32",
+			"title": "XSS vulnerabililty",
+			"link": "https://contao.org/en/news/contao-3_5_32.html",
+			"location": [
+				{
+					"Function": [
+						"Contao\\ModuleUnsubscribe::compile"
+					]
+				}
+			],
+			"CVE": "CVE-2018-5478"
+		},
+		{
+			"version": ">=3&&<3.5.39",
+			"title": "Existing sessions are not correctly invalidated when a user changes their password",
+			"link": "https://contao.org/en/news/security-vulnerability-cve-2019-10641.html",
+			"location": [
+				{
+					"Function": [
+						"tl_member::setNewPassword",
+						"Contao\\ModuleChangePassword::compile",
+						"Contao\\ModulePassword::setNewPassword"
+					]
+				}
+			],
+			"CVE": "CVE-2019-10641"
+		}
+	],
+	"contao/listing-bundle":[
+		{
+			"version": ">=4&&<4.4.8",
+			"title": "SQL injection vulnerabililty in the front end listing module",
+			"link": "https://contao.org/en/news/contao-4_4_8.html",
+			"location": [
+				{
+					"Function": [
+						"Contao\\DC_Table::searchMenu"
+					]
+				}
+			],
+			"CVE": "CVE-2017-16558"
+		}
+	],
+	"david-garcia/phpwhois":[
+		{
+			"version": "<=4.3.1",
+			"title": "PHP Code Injection",
+			"link": " https://github.com/sbaresearch/advisories/tree/public/2018/SBA-ADV-20180425-01_phpWhois_Code_Execution",
+			"location": [
+				{
+					"Function": "generic_parser_b"
+				}
+			], 
+			"CVE": "CVE-2015-5243"
+		}
+	],
+	"doctrine/annotations":[
+		{
+			"version": ">=1&&<1.2.7",
+			"title": "Security Misconfiguration Vulnerability  that can allow local arbitrary code execution",
+			"link": "https://www.doctrine-project.org/2015/08/31/security_misconfiguration_vulnerability_in_various_doctrine_projects.html",
+			"location": [
+				{
+					"Function": "Doctrine\\Common\\Annotations\\FileCacheReader::__construct"
+				}
+			], 
+			"CVE": "CVE-2015-5723"
+		}
+	],
+	"doctrine/cache":[
+		{
+			"version": ">=1&&<1.3.2||>=1.4&&<1.4.2",
+			"title": "Security Misconfiguration Vulnerability  that can allow local arbitrary code execution",
+			"link": "https://www.doctrine-project.org/2015/08/31/security_misconfiguration_vulnerability_in_various_doctrine_projects.html",
+			"location": [
+				{
+					"Function":[
+						"Doctrine\\Common\\Cache\\FileCache::__construct",
+						"Doctrine\\Common\\Cache\\FileCache::createPathIfNeeded",
+						"Doctrine\\Common\\Cache\\FilesystemCache::__construct",
+						"Doctrine\\Common\\Cache\\PhpFileCache::__construct"
+					]
+					
+				}
+			], 
+			"CVE": "CVE-2015-5723"
+		}
+	],
+	"doctrine/common":[
+		{
+			"version": ">=2&&<2.4.3||>=2.5&&<2.5.1",
+			"title": "Security Misconfiguration Vulnerability  that can allow local arbitrary code execution",
+			"link": "https://www.doctrine-project.org/2015/08/31/security_misconfiguration_vulnerability_in_various_doctrine_projects.html",
+			"location": [
+				{
+					"Function":[
+						"Doctrine\\Common\\Proxy\\ProxyGenerator::generateProxyClass"
+					]
+					
+				}
+			], 
+			"CVE": "CVE-2015-5723"
+		}
+	],
+	"doctrine/doctrine-bundle":[
+		{
+			"version": "<1.5.2",
+			"title": "Security Misconfiguration Vulnerability  that can allow local arbitrary code execution",
+			"link": "https://www.doctrine-project.org/2015/08/31/security_misconfiguration_vulnerability_in_various_doctrine_projects.html",
+			"location": [
+				{
+					"Function":[
+						"Doctrine\\Bundle\\DoctrineBundle\\Command\\ImportMappingDoctrineCommand::execute"
+					]
+					
+				}
+			], 
+			"CVE": "CVE-2015-5723"
+		}
+	],
+	"doctrine/doctrine-module":[
+		{
+			"version": "<=0.7.1",
+			"title": "Authentication Vulnerability - possible attempt to login via zero-valued password credential",
+			"link": "https://github.com/doctrine/DoctrineModule/issues/249",
+			"location": [
+				{
+					"Function":[
+						"DoctrineModule\\Authentication\\Adapter\\ObjectRepository::validateIdentity"
+					]
+					
+				}
+			] 
+		}
+	],
+	"doctrine/mongodb-odm-bundle": [
+		{
+			"version": ">=2&&<3.0.1",
+			"title": "Security Misconfiguration Vulnerability  that can allow local arbitrary code execution",
+			"link": "https://www.doctrine-project.org/2015/08/31/security_misconfiguration_vulnerability_in_various_doctrine_projects.html",
+			"location": [
+				{
+					"Function":[
+						"Doctrine\\Bundle\\MongoDBBundle\\CacheWarmer\\HydratorCacheWarmer::warmUp",
+						"Doctrine\\Bundle\\MongoDBBundle\\CacheWarmer\\ProxyCacheWarmer::warmUp",
+						"Doctrine\\Bundle\\MongoDBBundle\\DependencyInjection\\Compiler\\CreateHydratorDirectoryPass::process",
+						"Doctrine\\Bundle\\MongoDBBundle\\DependencyInjection\\Compiler\\CreateProxyDirectoryPass::process"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2015-5723"
+		}
+	],
+	"doctrine/mongodb-odm": [
+		{
+			"version": ">=1&&<1.0.2",
+			"title": "Security Misconfiguration Vulnerability  that can allow local arbitrary code execution",
+			"link": "https://www.doctrine-project.org/2015/08/31/security_misconfiguration_vulnerability_in_various_doctrine_projects.html",
+			"location": [
+				{
+					"Function":[
+						"Doctrine\\ODM\\MongoDB\\Hydrator\\HydratorFactory::hydrate",
+						"Doctrine\\ODM\\MongoDB\\Tools\\Console\\Command\\GenerateHydratorsCommand::execute",
+						"Doctrine\\ODM\\MongoDB\\Tools\\Console\\Command\\GenerateProxiesCommand::execute",
+						"Doctrine\\ODM\\MongoDB\\Tools\\DocumentGenerator::writeDocumentClass",
+						"Doctrine\\ODM\\MongoDB\\Tools\\DocumentRepositoryGenerator::writeDocumentRepositoryClass"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2015-5723"
+		}
+	],
+	"doctrine/orm": [
+		{
+			"version": ">=2&&<2.4.8||>=2.5&&<2.5.1",
+			"title": "Security Misconfiguration Vulnerability  that can allow local arbitrary code execution",
+			"link": "https://www.doctrine-project.org/2015/08/31/security_misconfiguration_vulnerability_in_various_doctrine_projects.html",
+			"location": [
+				{
+					"Function":[
+						"Doctrine\\ORM\\Cache\\Region\\FileLockRegion::__construct",
+						"Doctrine\\ORM\\Cache\\Region\\FileLockRegion::lock",
+						"Doctrine\\ORM\\Tools\\Console\\Command\\ConvertMappingCommand::execute",
+						"Doctrine\\ORM\\Tools\\Console\\Command\\GenerateProxiesCommand::execute",
+						"Doctrine\\ORM\\Tools\\EntityGenerator::writeEntityClass",
+						"Doctrine\\ORM\\Tools\\EntityRepositoryGenerator::writeEntityRepositoryClass",
+						"Doctrine\\ORM\\Tools\\Export\\Driver\\AbstractExporter::export",
+						
+					]
+					
+				}
+			], 
+			"CVE": "CVE-2015-5723"
+		}
+	],
+	"dompdf/dompdf":[
+		{
+			"version": ">=0.6&&<0.6.1",
+			"title": "PHP remote file inclusion vulnerability",
+			"link": "https://github.com/dompdf/dompdf/releases/tag/v0.6.2",
+			"location": [
+				{
+					"Function": "getoptions"
+				}
+			],
+			"CVE": "CVE-2010-4879"
+		},
+		{
+			"version": ">=0.6&&<0.6.1",
+			"title": "Arbitrary file read in dompdf",
+			"link": "https://www.portcullis-security.com/security-research-and-downloads/security-advisories/cve-2014-2383/",
+			"location": [
+				{
+					"Function": [
+						"getoptions",
+						"DOMPDF::load_html"
+					]
+				}
+			],
+			"CVE": "CVE-2014-2383"
+		}
+	],
+	"drupal/core": [
+		{
+			"version": ">=8&&<8.0.4",
+			"title": "File upload access bypass and denial of service",
+			"link": "https://www.drupal.org/SA-CORE-2016-001",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\file\\Element\\ManagedFile::valueCallback"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-3162"
+		},
+		{
+			"version": ">=8&&<8.1.7",
+			"title": "Highly Critical Injection",
+			"link": "https://www.drupal.org/SA-CORE-2016-003",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\Http\\ClientFactory::fromOptions"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-5385"
+		},
+		{
+			"version": ">=8&&<8.1.10",
+			"title": "Cross-site Scripting ",
+			"link": "https://www.drupal.org/SA-CORE-2016-004",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\EventSubscriber\\DefaultExceptionSubscriber::onException"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-7571"
+		},
+		{
+			"version": ">=8&&<8.1.10",
+			"title": "Full config export can be downloaded without administrative permissions",
+			"link": "https://www.drupal.org/SA-CORE-2016-004",
+			"location": [
+				{
+					"Function":[
+						"config_file_download"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-7572"
+		},
+		{
+			"version": ">=8&&<8.2.3",
+			"title": "Inconsistent name for term access query",
+			"link": "https://www.drupal.org/SA-CORE-2016-005",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\Database\\Query\\Select::preExecute"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-9449"
+		},
+		{
+			"version": ">=8&&<8.2.3",
+			"title": "A specially crafted URL can cause a denial of service via the transliterate mechanism.",
+			"link": "https://www.drupal.org/SA-CORE-2016-005",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\system\\MachineNameController::preExecute::transliterate"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-9452"
+		},
+		{
+			"version": ">=8&&<8.2.7",
+			"title": "Editor module incorrectly checks access to inline private files",
+			"link": "https://www.drupal.org/SA-2017-001",
+			"location": [
+				{
+					"Function":[
+						"editor_file_download"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6377"
+		},
+		{
+			"version": ">=8&&<8.3.1",
+			"title": "Access bypass",
+			"link": "https://www.drupal.org/SA-2017-002",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\Entity\\EntityAccessControlHandler::fieldAccess"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6919"
+		},
+		{
+			"version": ">=8&&<8.3.4",
+			"title": "Unserialize php object",
+			"link": "https://www.drupal.org/SA-CORE-2017-003",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Component\\Serialization\\YamlPecl::decode"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6920"
+		},
+		{
+			"version": ">=8&&<8.3.4",
+			"title": "Files uploaded by anonymous users into a private file system can be accessed by other anonymous users",
+			"link": "https://www.drupal.org/SA-CORE-2017-003",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\file\\FileAccessControlHandler::checkAccess"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6922"
+		},
+		{
+			"version": ">=8&&<8.3.7",
+			"title": "Views does not properly restrict access to the Ajax endpoint.",
+			"link": "https://www.drupal.org/SA-CORE-2017-004",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\views\\Controller\\ViewAjaxController::ajaxView"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6923"
+		},
+		{
+			"version": ">=8&&<8.3.7",
+			"title": "Entity access bypass for entities that do not have UUIDs or have protected revisions.",
+			"link": "https://www.drupal.org/SA-CORE-2017-004",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\Entity\\EntityAccessControlHandler::access"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6925"
+		},
+		{
+			"version": ">=8&&<8.4.5",
+			"title": "Comment reply form allows access to restricted content.",
+			"link": "https://www.drupal.org/SA-CORE-2018-001",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\comment\\Controller\\CommentController::replyFormAccess"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6926"
+		},
+		{
+			"version": ">=8&&<8.4.5",
+			"title": "When using node access controls with a multilingual site, Drupal marks the untranslated version of a node as the default fallback for access queries. This fallback is used for languages that do not yet have a translated version of the created node. This can result in an access bypass vulnerability",
+			"link": "https://www.drupal.org/SA-CORE-2018-001",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\node\\NodeGrantDatabaseStorage::write"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6930"
+		},
+		{
+			"version": ">=8&&<8.3.9||>=8.4&&<8.4.6||>=8.5&&<8.5.1||>=7&&<7.58",
+			"title": "Highly critical - Remote Code Execution ",
+			"link": "https://www.drupal.org/SA-CORE-2018-001",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\DrupalKernel::preHandle"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2018-7600"
+		},
+		{
+			"version": ">=8&&<8.4.8||>=8.5&&<8.5.3||>=7&&<7.59",
+			"title": "Highly critical - Remote Code Execution",
+			"link": "https://www.drupal.org/sa-core-2018-004",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\Security\\RequestSanitizer::sanitize",
+						"Drupal\\file\\Element\\ManagedFile::uploadAjaxCallback"
+					]
+				}
+			],
+			"CVE": "CVE-2018-7602"
+		},
+		{
+			"version": ">=8&&<8.5.9||>=8.6&&<8.6.6||>=7&&<7.62",
+			"title": "Critical - Arbitrary PHP code execution",
+			"link": "https://www.drupal.org/sa-core-2018-004",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\DrupalKernel::boot"
+					]
+				}
+			],
+			"CVE": "CVE-2019-6339"
+		},
+		{
+			"version": ">8.7.3&&<8.7.5",
+			"title": "Critical - Access bypass",
+			"link": "ttps://www.drupal.org/sa-core-2019-008",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\workspaces\\EntityAccess::bypassAccessResult"
+					]
+				}
+			],
+			"CVE": "CVE-2019-6342"
+		}
+	],
+	"drupal/drupal": [
+		{
+			"version": ">=8&&<8.0.4",
+			"title": "File upload access bypass and denial of service",
+			"link": "https://www.drupal.org/SA-CORE-2016-001",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\file\\Element\\ManagedFile::valueCallback"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-3162"
+		},
+		{
+			"version": ">=8&&<8.1.7",
+			"title": "Highly Critical Injection",
+			"link": "https://www.drupal.org/SA-CORE-2016-003",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\Http\\ClientFactory::fromOptions"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-5385"
+		},
+		{
+			"version": ">=8&&<8.1.10",
+			"title": "Cross-site Scripting ",
+			"link": "https://www.drupal.org/SA-CORE-2016-004",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\EventSubscriber\\DefaultExceptionSubscriber::onException"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-7571"
+		},
+		{
+			"version": ">=8&&<8.1.10",
+			"title": "Full config export can be downloaded without administrative permissions",
+			"link": "https://www.drupal.org/SA-CORE-2016-004",
+			"location": [
+				{
+					"Function":[
+						"config_file_download"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-7572"
+		},
+		{
+			"version": ">=8.0&&<8.2.3",
+			"title": "Inconsistent name for term access query",
+			"link": "https://www.drupal.org/SA-CORE-2016-005",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\Database\\Query\\Select::preExecute"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-9449"
+		},
+		{
+			"version": ">=8.0&&<8.2.3",
+			"title": "A specially crafted URL can cause a denial of service via the transliterate mechanism.",
+			"link": "https://www.drupal.org/SA-CORE-2016-005",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\system\\MachineNameController::preExecute::transliterate"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2016-9452"
+		},
+		{
+			"version": ">=8.0&&<8.2.7",
+			"title": "Editor module incorrectly checks access to inline private files",
+			"link": "https://www.drupal.org/SA-2017-001",
+			"location": [
+				{
+					"Function":[
+						"editor_file_download"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6377"
+		},
+		{
+			"version": ">=8.0&&<8.3.1",
+			"title": "Access bypass",
+			"link": "https://www.drupal.org/SA-2017-002",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\Entity\\EntityAccessControlHandler::fieldAccess"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6919"
+		},
+		{
+			"version": ">=8.0&&<8.3.4",
+			"title": "Unserialize php object",
+			"link": "https://www.drupal.org/SA-CORE-2017-003",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Component\\Serialization\\YamlPecl::decode"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6920"
+		},
+		{
+			"version": ">=8.0&&<8.3.4",
+			"title": "Files uploaded by anonymous users into a private file system can be accessed by other anonymous users",
+			"link": "https://www.drupal.org/SA-CORE-2017-003",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\file\\FileAccessControlHandler::checkAccess"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6922"
+		},
+		{
+			"version": ">=8.0&&<8.3.7",
+			"title": "Views does not properly restrict access to the Ajax endpoint.",
+			"link": "https://www.drupal.org/SA-CORE-2017-004",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\views\\Controller\\ViewAjaxController::ajaxView"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6923"
+		},
+		{
+			"version": ">=8.0&&<8.3.7",
+			"title": "Entity access bypass for entities that do not have UUIDs or have protected revisions.",
+			"link": "https://www.drupal.org/SA-CORE-2017-004",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\Entity\\EntityAccessControlHandler::access"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6925"
+		},
+		{
+			"version": ">=8.0&&<8.4.5",
+			"title": "Comment reply form allows access to restricted content.",
+			"link": "https://www.drupal.org/SA-CORE-2018-001",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\comment\\Controller\\CommentController::replyFormAccess"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6926"
+		},
+		{
+			"version": ">=8.0&&<8.4.5",
+			"title": "When using node access controls with a multilingual site, Drupal marks the untranslated version of a node as the default fallback for access queries. This fallback is used for languages that do not yet have a translated version of the created node. This can result in an access bypass vulnerability",
+			"link": "https://www.drupal.org/SA-CORE-2018-001",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\node\\NodeGrantDatabaseStorage::write"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2017-6930"
+		},
+		{
+			"version": ">=8.0&&<8.3.9||>=8.4&&<8.4.6||>=8.5&&<8.5.1||>=7.0&&<7.58",
+			"title": "Highly critical - Remote Code Execution ",
+			"link": "https://www.drupal.org/SA-CORE-2018-001",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\DrupalKernel::preHandle"
+					]
+					
+				}
+			],
+			"CVE": "CVE-2018-7600"
+		},
+		{
+			"version": ">=8.0&&<8.4.8||>=8.5&&<8.5.3||>=7.0&&<7.59",
+			"title": "Highly critical - Remote Code Execution",
+			"link": "https://www.drupal.org/sa-core-2018-004",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\Security\\RequestSanitizer::sanitize",
+						"Drupal\\file\\Element\\ManagedFile::uploadAjaxCallback"
+					]
+				}
+			],
+			"CVE": "CVE-2018-7602"
+		},
+		{
+			"version": ">=8.0&&<8.5.9||>=8.6.0&&<8.6.6||>=7.0&&<7.62.0",
+			"title": "Critical - Arbitrary PHP code execution",
+			"link": "https://www.drupal.org/sa-core-2018-004",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\Core\\DrupalKernel::boot"
+					]
+				}
+			],
+			"CVE": "CVE-2019-6339"
+		},
+		{
+			"version": ">8.7.3&&<8.7.5",
+			"title": "Critical - Access bypass",
+			"link": "https://www.drupal.org/sa-core-2019-008",
+			"location": [
+				{
+					"Function":[
+						"Drupal\\workspaces\\EntityAccess::bypassAccessResult"
+					]
+				}
+			],
+			"CVE": "CVE-2019-6342"
+		}
+	],
+	"erusev/parsedown": [
+		{
+			"version": "<1.7.0",
+			"title": "Cross-Site Scripting",
+			"link": "https://github.com/erusev/parsedown/pull/495",
+			"location": [
+				{
+					"Function":[
+						"Parsedown::inlineLink",
+						"Parsedown::element"
+					]
+				}
+			],
+			"CVE": "CVE-2018-1000162"
+		},
+		{
+			"version": "<1.7.2",
+			"title": "Parsedown before 1.7.2, when safe mode is used and HTML markup is disabled, might allow attackers to execute arbitrary JavaScript code if a script (already running on the affected page) executes the contents of any element with a specific class.",
+			"link": "https://github.com/erusev/parsedown/issues/699",
+			"location": [
+				{
+					"Function":[
+						"Parsedown::blockFencedCode"
+					]
+				}
+			],
+			"CVE": "CVE-2019-10905"
+		},
+	],
+	"ezsystems/demobundle":[
+		{
+			"version": ">=5.4.0&&<5.4.6.1",
+			"title": "XSS  Vulnerability.",
+			"link": "https://ezplatform.com/security-advisories/ezsa-2020-003-xss-in-demobundle-ezdemo-bundled-videojs",
+			"location": [
+				{
+					"Function":[
+						"Parsedown::blockFencedCode"
+					]
+				}
+			],
+		}
+	],
+	"ezsystems/ezpublish-legacy":[
+		{
+			"version": ">=5.4.0&&<5.4.10||>=5.3.0&&<5.3.12.1",
+			"title": "XSS  Vulnerability.",
+			"link": "http://share.ez.no/community-project/security-advisories/ezsa-2017-005-xss-issue-in-search",
+			"location": [
+				{
+					"Function":[
+						"pageLimit"
+					]
+				}
+			],
+			"CVE": "CVE-2017-1000431"
+		}
+	],
+	"ezyang/htmlpurifier":[
+		{
+			"version": "<4.1.1",
+			"title": "XSS vulnerability exploitable on Internet Explorer",
+			"link": "http://htmlpurifier.org/news/2010/0531-4.1.1-released",
+			"location": [
+				{
+					"Function":[
+						"HTMLPurifier_AttrDef_CSS_FontFamily::validate",
+						"HTMLPurifier_AttrDef_CSS_URI::validate"
+					]
+				}
+			],
+			"CVE": "CVE-2010-2479"
+		}
+	],
+	"firebase/php-jwt":[
+		{
+			"version": "<2.0.0",
+			"title": "Critical vulnerabilities allowing attackers to bypass the verification step.",
+			"link": "https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/",
+			"location": [
+				{
+					"Function":[
+						"JWT::verify",
+					]
+				}
+			]
+		}
+	],
+	"fooman/tcpdf":[
+		{
+			"version": "<6.2.22",
+			"title": "Attackers can trigger deserialization of arbitrary data via the phar:// wrapper.",
+			"link": "https://github.com/tecnickcom/TCPDF/commit/1861e33fe05f653b67d070f7c106463e7a5c26ed",
+			"location": [
+				{
+					"Function":[
+						"TCPDF_IMAGES::_parsejpeg",
+						"TCPDF::Image",
+						"TCPDF_FONTS::addTTFfont",
+						"TCPDF_FONTS::_getfontpath",
+						"TCPDF_STATIC::fileGetContents",
+						"TCPDF::AddFont",
+						"TCPDF::Annotation"
+					]
+				}
+			],
+			"CVE": "CVE-2018-17057"
+		}
+	],
+	"fossar/tcpdf-parser":[
+		{
+			"version": "<6.2.22",
+			"title": "Attackers can trigger deserialization of arbitrary data via the phar:// wrapper.",
+			"link": "https://github.com/tecnickcom/TCPDF/commit/1861e33fe05f653b67d070f7c106463e7a5c26ed",
+			"location": [
+				{
+					"Function":[
+						"TCPDF_IMAGES::_parsejpeg",
+						"TCPDF::Image",
+						"TCPDF_FONTS::addTTFfont",
+						"TCPDF_FONTS::_getfontpath",
+						"TCPDF_STATIC::fileGetContents",
+						"TCPDF::AddFont",
+						"TCPDF::Annotation"
+					]
+				}
+			],
+			"CVE": "CVE-2018-17057"
+		}
+	],
+	"friendsofsymfony/user-bundle":[
+		{
+			"version": ">=1.2.0&&<1.2.4",
+			"title": "session could be hijacked",
+			"link": "https://github.com/FriendsOfSymfony/FOSUserBundle/blob/master/Changelog.md",
+			"location": [
+				{
+					"Function":[
+						"FOS\\UserBundle\\Controller\\ResettingController::authenticateUser",
+						"FOS\\UserBundle\\Controller\\RegistrationController::authenticateUser"
+					]
+				}
+			]
+		}
+	],
+	"friendsofsymfony/oauth2-php":[
+		{
+			"version": "<1.3.0",
+			"title": "redirect uri validation",
+			"link": "https://github.com/FriendsOfSymfony/oauth2-php/releases/tag/1.3.0",
+			"location": [
+				{
+					"Function":[
+						"OAuth2\\OAuth2::validateRedirectUri",
+					]
+				}
+			]
+		}
+	],
+	"fuel/core":[
+		{
+			"version": "<1.8.0.4",
+			"title": "ImageMagick driver does not escape all shell arguments",
+			"link": "https://fuelphp.com/security-advisories",
+			"location": [
+				{
+					"Function":[
+						"Fuel\\Core\\Image_Imagemagick::load",
+						"Fuel\\Core\\Image_Imagemagick::_crop",
+						"Fuel\\Core\\Image_Imagemagick::_resize",
+						"Fuel\\Core\\Image_Imagemagick::_rotate",
+						"Fuel\\Core\\Image_Imagemagick::_flip",
+						"Fuel\\Core\\Image_Imagemagick::_watermark",
+						"Fuel\\Core\\Image_Imagemagick::_border",
+						"Fuel\\Core\\Image_Imagemagick::_mask",
+						"Fuel\\Core\\Image_Imagemagick::_rounded",
+						"Fuel\\Core\\Image_Imagemagick::sizes",
+						"Fuel\\Core\\Image_Imagemagick::save",
+						"Fuel\\Core\\Image_Imagemagick::output",
+						"Fuel\\Core\\Image_Imagemagick::add_background"
+					]
+				}
+			]
+		}
+	],
+	"guzzlehttp/guzzle":[
+		{
+			"version": ">=6&&<6.2.1||>=4.0.0-rc2&&<4.2.4||>=5&&<5.3.1",
+			"title": "HTTP Proxy header vulnerability",
+			"link": " https://github.com/guzzle/guzzle/releases/tag/6.2.1",
+			"location": [
+				{
+					"Function":[
+						"GuzzleHttp\\Client::configureDefaults",
+					]
+				}
+			],
+			"CVE": "CVE-2016-5385"
+		}
+	],
+	"illuminate/auth":[
+		{
+			"version": ">=4.1.26&&<=4.1.31||>=4.2.0&&<=4.2.22||>=5.0.0&&<=5.0.35||>=5.1.0&&<=5.1.46||>=5.2.0&&<=5.2.45||>=5.3.0&&<=5.3.31||>=5.4.0&&<=5.4.36||>=5.5.0&&<5.5.10",
+			"title": "Timing attack vector for remember me token",
+			"link": "https://github.com/laravel/framework/pull/21320",
+			"location": [
+				{
+					"Function":[
+						"Illuminate\\Auth\\DatabaseUserProvider::retrieveByToken",
+						"Illuminate\\Auth\\EloquentUserProvider::retrieveById"
+					]
+				}
+			],
+			"CVE": "CVE-2017-14775"
+		}
+	],
+	"illuminate/encryption":[
+		{
+			"version": ">=4.0.0&&<5.5.40||>=5.6.0&&<5.6.15",
+			"title": "Exploit of encryption failure vulnerability",
+			"link": "https://medium.com/@taylorotwell/laravel-security-release-5-6-15-and-5-5-40-56f1257933a0",
+			"location": [
+				{
+					"Function":[
+						"Illuminate\\Encryption\\Encrypter::validPayload"
+					]
+				}
+			]
+		}
+	],
+	"ivankristianto/phpwhois":[
+		{
+			"version": "<=4.3.0",
+			"title": "PHP Code Injection",
+			"link": "https://github.com/sbaresearch/advisories/tree/public/2018/SBA-ADV-20180425-01_phpWhois_Code_Execution",
+			"location": [
+				{
+					"Function": "generic_parser_b"
+				}
+			], 
+			"CVE": "CVE-2015-5243"
+		}
+	],
+	"james-heinrich/getid3":[
+		{
+			"version": "<1.9.9",
+			"title": "Potential XXE security issue",
+			"link": "https://github.com/JamesHeinrich/getID3/commit/afbdaa044a9a0a9dff2f800bd670e231b3ec99b2",
+			"location": [
+				{
+					"Function": "getid3_lib::XML2array"
+				}
+			], 
+			"CVE": "CVE-2014-2053"
+		}
+	],
+	"joomla/session":[
+		{
+			"version": "<1.3.1",
+			"title": "Remote Code Execution Vulnerability",
+			"link": "https://developer.joomla.org/security-centre/637-20151205-session-remote-code-execution-vulnerability.html",
+			"location": [
+				{
+					"Function": "Joomla\\Session\\Session::validate"
+				}
+			]
+		}
+	],
+	"jsmitty12/phpwhois":[
+		{
+			"version": "<5.1.0",
+			"title": "PHP Code Injection",
+			"link": "https://github.com/sbaresearch/advisories/tree/public/2018/SBA-ADV-20180425-01_phpWhois_Code_Execution",
+			"location": [
+				{
+					"Function": "generic_parser_b"
+				}
+			], 
+			"CVE": "CVE-2015-5243"
+		}
+	],
+	"kazist/phpwhois":[
+		{
+			"version": "<=4.2.6",
+			"title": "PHP Code Injection",
+			"link": "https://github.com/sbaresearch/advisories/tree/public/2018/SBA-ADV-20180425-01_phpWhois_Code_Execution",
+			"location": [
+				{
+					"Function": "generic_parser_b"
+				}
+			], 
+			"CVE": "CVE-2015-5243"
+		}
+	],
+	"kreait/firebase-php":[
+		{
+			"version": ">=3.2.0&&<3.8.1",
+			"title": "Incorrect Access Control vulnerability",
+			"link": "https://github.com/kreait/firebase-php/releases/tag/3.8.1",
+			"location": [
+				{
+					"Function": "Kreait\\Firebase\\Auth\\IdTokenVerifier::verify"
+				}
+			], 
+			"CVE": "CVE-2018-1000025"
+		}
+	],
+	"la-haute-societe/tcpdf":[
+		{
+			"version": "<6.2.22",
+			"title": "Attackers can trigger deserialization of arbitrary data via the phar:// wrapper.",
+			"link": "https://github.com/tecnickcom/TCPDF/commit/1861e33fe05f653b67d070f7c106463e7a5c26ed",
+			"location": [
+				{
+					"Function":[
+						"TCPDF_IMAGES::_parsejpeg",
+						"TCPDF::Image",
+						"TCPDF_FONTS::addTTFfont",
+						"TCPDF_FONTS::_getfontpath",
+						"TCPDF_STATIC::fileGetContents",
+						"TCPDF::AddFont",
+						"TCPDF::Annotation"
+					]
+				}
+			],
+			"CVE": "CVE-2018-17057"
+		}
+	],
+	"laravel/framework":[
+		{
+			"version": ">=4.0.0&&<5.5.40||>=5.6.0&&<5.6.15",
+			"title": "Exploit of encryption failure vulnerability",
+			"link": "https://medium.com/@taylorotwell/laravel-security-release-5-6-15-and-5-5-40-56f1257933a0",
+			"location": [
+				{
+					"Function":[
+						"Illuminate\\Encryption\\Encrypter::validPayload"
+					]
+				}
+			]
+		},
+		{
+			"version": ">=4.1.26&&<=4.1.31||>=4.2.0&&<=4.2.22||>=5.0.0&&<=5.0.35||>=5.1.0&&<=5.1.46||>=5.2.0&&<=5.2.45||>=5.3.0&&<=5.3.31||>=5.4.0&&<=5.4.36||>=5.5.0&&<5.5.10",
+			"title": "Timing attack vector for remember me token",
+			"link": "https://github.com/laravel/framework/pull/21320",
+			"location": [
+				{
+					"Function":[
+						"Illuminate\\Auth\\DatabaseUserProvider::retrieveByToken",
+						"Illuminate\\Auth\\EloquentUserProvider::retrieveById"
+					]
+				}
+			],
+			"CVE": "CVE-2017-14775"
+		}
+	],
+	"laravel/socialite":[
+		{
+			"version": ">=1.0.0&&<1.0.99||>=2.0.0&&<2.0.10",
+			"title": "State guessing vulnerability",
+			"link": "https://github.com/laravel/socialite/pull/93",
+			"location": [
+				{
+					"Function":[
+						"Laravel\\Socialite\\Two\\AbstractProvider::hasInvalidState"
+					]
+				}
+			]
+		}
+	],
+	"league/commonmark":[
+		{
+			"version": ">=0.15.6&&<0.18.1",
+			"title": "XSS vulnerability with unsafe link protocols",
+			"link": "https://github.com/thephpleague/commonmark/issues/337",
+			"location": [
+				{
+					"Function":[
+						"League\\CommonMark\\Util\\UrlEncoder::decode"
+					]
+				}
+			],
+			"CVE": "CVE-2018-20583"
+		},
+		{
+			"version": "<0.18.3",
+			"title": "XSS vulnerability with double-encoded entities",
+			"link": "https://github.com/thephpleague/commonmark/issues/353",
+			"location": [
+				{
+					"Function":[
+						"League\\CommonMark\\Block\\Renderer\\FencedCodeRenderer::render",
+						"League\\CommonMark\\Inline\\Renderer\\ImageRenderer::render",
+						"League\\CommonMark\\Inline\\Renderer\\LinkRenderer::render"
+					]
+				}
+			],
+			"CVE": "CVE-2019-10010"
+		}
+	],
+	"monolog/monolog":[
+		{
+			"version": ">=1.8.0&&<1.12.0",
+			"title": "Header injection in NativeMailerHandler",
+			"link": "https://github.com/Seldaek/monolog/pull/448#issuecomment-68208704",
+			"location": [
+				{
+					"Function":[
+						"Monolog\\Handler\\NativeMailerHandler::getEncoding",
+						"Monolog\\Handler\\NativeMailerHandler::setEncoding"
+					]
+				}
+			]
+		}
+	],
+	"namshi/jose":[
+		{
+			"version": "<2.2.0",
+			"title": "Critical vulnerabilities allowing attackers to bypass the verification step.",
+			"link": "https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/",
+			"location": [
+				{
+					"Function":[
+						"Namshi\\JOSE\\JWS::verify",
+					]
+				}
+			]
+		},
+	],
+	"onelogin/php-saml":[
+		{
+			"version": "<2.10.4",
+			"title": "An error during signature verification can be treated as a successful verification.",
+			"link": "https://github.com/onelogin/php-saml/commit/949359f5cad5e1d085c4e5447d9aa8f49a6e82a1",
+			"location": [
+				{
+					"Function":[
+						"OneLogin_Saml2_LogoutRequest::isValid",
+						"OneLogin_Saml2_LogoutResponse::isValid"
+					]
+				}
+			]
+		},
+		{
+			"version": "<2.10.0",
+			"title": "Vulnerability to Response Wrapping attacks resulting in a malicious user gaining unauthorized access to a system.",
+			"link": "https://github.com/onelogin/php-saml/commit/9d31baa97a57b0989020f62d24307c29e325dac3",
+			"location": [
+				{
+					"Function":[
+						"OneLogin_Saml2_Response::isValid",
+						"OneLogin_Saml2_Response::getIssuers",
+						"OneLogin_Saml2_Response::getNameIdData",
+						"OneLogin_Saml2_Response::validateSignedElements",
+						"OneLogin_Saml2_Utils::validateSign"
+					]
+				}
+			],
+			"CVE": "CVE-2016-1000253"
+		}
+	],
+	"oneup/uploader-bundle":[
+		{
+			"version": ">=1.0.0&&<1.9.3||>=2.0.0&&<2.1.5",
+			"title": "Relative Path Traversal (CWE-23) in chunked uploads",
+			"link": "https://github.com/1up-lab/OneupUploaderBundle/security/advisories/GHSA-x8wj-6m73-gfqp",
+			"location": [
+				{
+					"Function":[
+						"Oneup\\UploaderBundle\\Uploader\\Chunk\\Storage\\FilesystemStorage::addChunk",
+						"Oneup\\UploaderBundle\\Uploader\\Chunk\\Storage\\FilesystemStorage::getChunks",
+						"Oneup\\UploaderBundle\\Uploader\\Chunk\\Storage\\FlysystemStorage::getChunks",
+						"Oneup\\UploaderBundle\\Uploader\\Chunk\\Storage\\FlysystemStorage::addChunk",
+						"Oneup\\UploaderBundle\\Uploader\\Chunk\\Storage\\GaufretteStorage::addChunk",
+						"Oneup\\UploaderBundle\\Uploader\\Chunk\\Storage\\GaufretteStorage::getChunks",
+					]
+				}
+			],
+			"CVE": "CVE-2020-5237"
+		}
+	],
+	"openid/php-openid":[
+		{
+			"version": "<2.3.0",
+			"title": "XML External Entity (XXE) issue",
+			"link": "https://github.com/openid/php-openid/commit/625c16bb28bb120d262b3f19f89c2c06cb9b0da9",
+			"location": [
+				{
+					"Function":[
+						"Auth_Yadis_XMLParser::setXML"
+					]
+				}
+			],
+			"CVE": "CVE-2013-4701"
+		}
+	],
+	"paragonie/random_compat":[
+		{
+			"version": "<2.0",
+			"title": "Uses insecure CSPRNG (openssl_random_pseudo_bytes())",
+			"link": "https://github.com/paragonie/random_compat/issues/96",
+			"location": [
+				{
+					"Function":[
+						"random_bytes"
+					]
+				}
+			]
+		}
+	],
+	"pear/archive_tar":[
+		{
+			"version": "<1.4.4",
+			"title": "Potential RCE if filename starts with phar://",
+			"link": "https://pear.php.net/bugs/bug.php?id=23782",
+			"location": [
+				{
+					"Function":[
+						"Archive_Tar::_tarRecToSize"
+					]
+				}
+			],
+			"CVE": "CVE-2018-1000888"
+		}
+	],
+	"phpmailer/phpmailer":[
+		{
+			"version": ">=5.0.0&&<5.2.18",
+			"title": "Remote Code Execution",
+			"link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v5.2.18",
+			"location": [
+				{
+					"Function":[
+						"Archive_Tar::_tarRecToSize"
+					]
+				}
+			],
+			"CVE": "CVE-2016-10033"
+		},
+		{
+			"version": ">=5.0.0&&<5.2.20",
+			"title": "Remote Code Execution",
+			"link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v5.2.20",
+			"location": [
+				{
+					"Function":[
+						"PHPMailer::sendmailSend"
+					]
+				}
+			],
+			"CVE": "CVE-2016-10045"
+		},
+		{
+			"version": ">=5.0.0&&<5.2.22",
+			"title": "Local File Disclosure",
+			"link": "https://github.com/PHPMailer/PHPMailer/releases/tag/v5.2.22",
+			"location": [
+				{
+					"Function":[
+						"PHPMailer::msgHTML"
+					]
+				}
+			],
+			"CVE": "CVE-2017-5223"
+		},
+	],
+	"phpoffice/phpexcel":[
+		{
+			"version": "<1.8.2",
+			"title": "XXE Vulnerability",
+			"link": "https://github.com/PHPOffice/PhpSpreadsheet/issues/771",
+			"location": [
+				{
+					"Function":[
+						"PHPExcel_Reader_Abstract::canRead"
+					]
+				}
+			],
+			"CVE": "CVE-2018-19277"
+		},
+	],
+	"phpoffice/phpspreadsheet":[
+		{
+			"version": "<=1.5.0",
+			"title": "XXE Vulnerability",
+			"link": "https://github.com/PHPOffice/PhpSpreadsheet/issues/771",
+			"location": [
+				{
+					"Function":[
+						"PhpOffice\\PhpSpreadsheet\\Reader\\Html::securityScan"
+					]
+				}
+			],
+			"CVE": "CVE-2018-19277"
+		},
+	],
+	"phpwhois/phpwhois":[
+		{
+			"version": "<=4.2.5",
+			"title": "PHP Code Injection",
+			"link": "https://github.com/sbaresearch/advisories/tree/public/2018/SBA-ADV-20180425-01_phpWhois_Code_Execution",
+			"location": [
+				{
+					"Function": "generic_parser_b"
+				}
+			], 
+			"CVE": "CVE-2015-5243"
+		}
+	],
+	"phpxmlrpc/extras":[
+		{
+			"version": "<0.6.1",
+			"title": "XSS Vulnerability",
+			"link": "https://github.com/gggeek/phpxmlrpc-extras/releases/tag/0.6.1",
+			"location": [
+				{
+					"Function": "documenting_xmlrpc_server::generateDocs"
+				}
+			]
+		}
+	],
+	"propel/propel":[
+		{
+			"version": ">=2.0.0-alpha1&&<=2.0.0-alpha7",
+			"title": "SQL injection possible with limit() on MySQL",
+			"link": "https://github.com/propelorm/Propel2/issues/1463",
+			"location": [
+				{
+					"Function": "Propel\\Runtime\\ActiveQuery\\Criteria::setLimit"
+				}
+			]
+		}
+	],
+	"propel/propel1":[
+		{
+			"version": ">=1&&<=1.7.1",
+			"title": "SQL injection possible with limit() on MySQL",
+			"link": "https://github.com/propelorm/Propel/issues/1052",
+			"location": [
+				{
+					"Function": [
+						"Criteria::setLimit",
+						"DBMySQL::applyLimit"
+					]
+				}
+			]
+		}
+	],
+	"pusher/pusher-php-server":[
+		{
+			"version": "<2.2.1",
+			"title": "Exploit in the private channel authentication",
+			"link": "https://blog.pusher.com/update-on-security/",
+			"location": [
+				{
+					"Function": [
+						"Pusher::trigger",
+						"Pusher::get"
+					]
+				}
+			]
+		}
+	],
+	"robrichards/xmlseclibs":[
+		{
+			"version": ">=1.0.0&&<3.0.4",
+			"title": "Critical signature bypass",
+			"link": "https://simplesamlphp.org/security/201911-01",
+			"location": [
+				{
+					"Function": [
+						"RobRichards\\XMLSecLibs\\XMLSecurityDSig::locateSignature",
+						"RobRichards\\XMLSecLibs\\XMLSecurityDSig::canonicalizeSignedInfo"
+					]
+				}
+			],
+			"CVE": "CVE-2019-3465"
+		}
+	],
+	"scheb/two-factor-bundle":[
+		{
+			"version": ">=3.0.0&&<3.7.0",
+			"title": "Vulnerability to bypass two-factor authentication with unverified JWT trusted device token",
+			"link": "https://github.com/scheb/two-factor-bundle/issues/143",
+			"location": [
+				{
+					"Function": [
+						"Scheb\\TwoFactorBundle\\Security\\TwoFactor\\Trusted\\JwtTokenEncoder::decodeToken"
+					]
+				}
+			]
+		},
+		{
+			"version": ">=0.0.0&&<3.26.0",
+			"title": "Vulnerability to bypass two-factor authentication with remember-me option",
+			"link": "https://github.com/scheb/two-factor-bundle/issues/253",
+			"location": [
+				{
+					"Function": [
+						"Scheb\\TwoFactorBundle\\SchebTwoFactorBundle::build"
+					]
+				}
+			]
+		}
+	],
+	"serluck/phpwhois":[
+		{
+			"version": "<=4.2.6",
+			"title": "PHP Code Injection",
+			"link": "https://github.com/sbaresearch/advisories/tree/public/2018/SBA-ADV-20180425-01_phpWhois_Code_Execution",
+			"location": [
+				{
+					"Function": "generic_parser_b"
+				}
+			], 
+			"CVE": "CVE-2015-5243"
+		}
+	],
+	"shopware/shopware":[
+		{
+			"version": "<5.1.5",
+			"title": "Unauthenticated Remote Code Execution Vulnerability",
+			"link": "https://community.shopware.com/_detail_1918.html",
+			"location": [
+				{
+					"Function": [
+						"Enlight_Controller_Plugins_ScriptRenderer_Bootstrap::getTemplateName",
+						"Shopware_Controllers_Backend_ExtJs::extendsAction"
+					]
+				}
+			], 
+			"CVE": "CVE-2016-3109"
+		}
+	],
+	"silverstripe/framework":[
+		{
+			"version": ">=3.6.0&&<3.6.8||>=3.7.0&&<3.7.4||>=4.0.0&&<4.3.5||>=4.4.0&&<4.4.4",
+			"title": "A potential account hijacking may happen if an attacker has physical access to victim's computer to perform session fixation. Also possible if the targeted application contains an XSS vulnerability.",
+			"link": "https://www.silverstripe.org/download/security-releases/cve-2019-12203/",
+			"location": [
+				{
+					"Function": "SilverStripe\\Security\\MemberAuthenticator\\ChangePasswordHandler::setSessionToken"
+				}
+			], 
+			"CVE": "CVE-2019-12203"
+		},
+		{
+			"version": ">=4.3.0&&<4.3.5||>=4.4.0&&<4.4.4",
+			"title": "Access escalation for CMS users with limited access through permission cache pollution",
+			"link": "https://www.silverstripe.org/download/security-releases/cve-2019-12617/",
+			"location": [
+				{
+					"Function": "SilverStripe\\Security\\InheritedPermissions::generateCacheKey"
+				}
+			], 
+			"CVE": "CVE-2019-12617"
+		},
+		{
+			"version": ">=4.0.0&&<4.4.5||>=4.5.0&&<4.5.2",
+			"title": "XSS Vulnerability",
+			"link": "https://www.silverstripe.org/download/security-releases/cve-2019-19325/",
+			"location": [
+				{
+					"Function": [
+						"SilverStripe\\Forms\\Form::getAttributesHTML",
+						"SilverStripe\\Forms\\FormField::getAttributesHTML"
+					]
+				}
+			], 
+			"CVE": "CVE-2019-19325"
+		}
+	],
+	"silverstripe/graphql":[
+		{
+			"version": ">=2.0.0&&<3.1.2",
+			"title": "Cross Site Request Forgery (CSRF) Protection Bypass ",
+			"link": "https://www.silverstripe.org/download/security-releases/cve-2019-12437",
+			"location": [
+				{
+					"Function": [
+						"SilverStripe\\GraphQL\\Middleware\\CSRFMiddleware::process"
+					]
+				}
+			], 
+			"CVE": "CVE-2019-12437"
+		}
+	],
+	"silverstripe/restfulserver":[
+		{
+			"version": ">=1.0.0&&<2.0.4",
+			"title": "Potential SQL injection",
+			"link": "https://www.silverstripe.org/download/security-releases/cve-2019-12149",
+			"location": [
+				{
+					"Function": [
+						"SilverStripe\\RestfulServer\\RestfulServer::getHandler"
+					]
+				}
+			], 
+			"CVE": "CVE-2019-12149"
+		}
+	],
+	"silverstripe/taxonomy": [
+		{
+			"version": ">=1.3.0&&<2.0.1",
+			"title": "SQL injection vulnerability",
+			"link": "https://www.silverstripe.org/download/security-releases/ss-2018-011/",
+			"location": [
+				{
+					"Function": [
+						"TaxonomyDirectoryController::index"
+					]
+				}
+			]
+		}
+	],
+	"simple-updates/phpwhois":[
+		{
+			"version": "<=1.0.0",
+			"title": "PHP Code Injection",
+			"link": "https://github.com/sbaresearch/advisories/tree/public/2018/SBA-ADV-20180425-01_phpWhois_Code_Execution",
+			"location": [
+				{
+					"Function": "generic_parser_b"
+				}
+			], 
+			"CVE": "CVE-2015-5243"
+		}
+	],
+	"simplesamlphp/saml2":[
+		{
+			"version": "<1.8.1||>=1.9.0&&<1.9.1||>=1.10&&<1.10.3||>=2.0&&<2.3.3",
+			"title": "Incorrect signature verification",
+			"link": "https://simplesamlphp.org/security/201612-01",
+			"location": [
+				{
+					"Function": "SAML2\\Utils::validateSignature"
+				}
+			], 
+			"CVE": "CVE-2016-9814"
+		},
+		{
+			"version": "<1.10.5||>=2.0&&<2.3.7||>=3.0&&<3.1.3",
+			"title": "Incorrect signature validation",
+			"link": "https://simplesamlphp.org/security/201802-01",
+			"location": [
+				{
+					"Function": "SAML2\\Utils::castKey"
+				}
+			], 
+			"CVE": "CVE-2018-7644"
+		},
+		{
+			"version": "<1.10.6||>=2.0&&<2.3.8||>=3.0&&<3.1.4",
+			"title": "Incorrect signature validation",
+			"link": "https://simplesamlphp.org/security/201803-01",
+			"location": [
+				{
+					"Function": "SAML2\\HTTPRedirect::validateSignature"
+				}
+			], 
+			"CVE": "CVE-2018-7711"
+		},
+	],
+	"symfony/polyfill-php55": [
+		{
+			"version": ">=1.0.0&&<1.10.0",
+			"title": "Possible DOS attack with long user-submitted passwords",
+			"link": "https://github.com/symfony/polyfill/pull/155",
+			"location": [
+				{
+					"Function": "Symfony\\Polyfill\\Php55\\Php55::hash_pbkdf2"
+				}
+			],
+			"CVE": "CVE-2013-5958"
+		},
+	],
+	"symfony/http-foundation": [
+		{
+			"version": ">=2.8.0&&<2.8.52||>=3.4.0&&<3.4.35",
+			"title": "potential argument injection",
+			"link": "https://symfony.com/cve-2019-18888",
+			"location": [
+				{
+					"Function": "Symfony\\Component\\HttpFoundation\\File\\MimeType\\FileBinaryMimeTypeGuesser::guess"
+				}
+			],
+			"CVE": "CVE-2019-18888"
+		},
+		{
+			"version": ">=2.8.0&&<2.8.50||>=3.4.0&&<3.4.26",
+			"title": "Reject invalid HTTP method overrides",
+			"link": "https://symfony.com/cve-2019-18888",
+			"location": [
+				{
+					"Function": "Symfony\\Component\\HttpFoundation\\Request::getMethod"
+				}
+			],
+			"CVE": "CVE-2019-10913"
+		}
+	],
+	"symfony/http-kernel": [
+		{
+			"version": ">=2.8.0&&<2.8.52||>=3.4.0&&<3.4.35",
+			"title": "Use constant time comparison in UriSigner",
+			"link": "https://symfony.com/cve-2019-18887",
+			"location": [
+				{
+					"Function": "Symfony\\Component\\HttpKernel\\UriSigner::check"
+				}
+			],
+			"CVE": "CVE-2019-18887"
+		},
+	],
+	"symfony/dependency-injection": [
+		{
+			"version": ">=2.8.0&&<2.8.50||>=3.4.0&&<3.4.26",
+			"title": "Service IDs derived from unfiltered user input could result in the execution of any arbitrary code, resulting in possible remote code execution.",
+			"link": "https://symfony.com/cve-2019-10910",
+			"location": [
+				{
+					"Function": [
+						"Symfony\\Component\\DependencyInjection\\ContainerBuilder::setAlias",
+						"Symfony\\Component\\DependencyInjection\\ContainerBuilder::setDefinition"
+					]
+				}
+			],
+			"CVE": "CVE-2019-10910"
+		},
+	],
+	"twig/twig":[
+		{
+			"version": "<1.38.0",
+			"title": "Sandbox Information Disclosure.",
+			"link": "https://symfony.com/blog/twig-sandbox-information-disclosure",
+			"location": [
+				{
+					"Function": [
+						"Twig\\NodeVisitor\\SandboxNodeVisitor::doEnterNode",
+						"Twig\\NodeVisitor\\SandboxNodeVisitor::doLeaveNode",
+					]
+				}
+			]
+		},
+	],
+	"zendframework/zend-diactoros": [
+		{
+			"version": ">=1.0.0&&<1.8.4",
+			"title": "URL Rewrite vulnerability.",
+			"link": "https://framework.zend.com/security/advisory/ZF2018-01",
+			"location": [
+				{
+					"Function": [
+						"Zend\\Diactoros\\marshalUriFromSapi::marshalUriFromSapi"
+					]
+				}
+			]
+		},
+	],
+	"zendframework/zend-feed": [
+		{
+			"version": ">=1.0.0&&<2.10.3",
+			"title": "URL Rewrite vulnerability.",
+			"link": "https://framework.zend.com/security/advisory/ZF2018-01",
+			"location": [
+				{
+					"Function": [
+						"Zend\\Feed\\PubSubHubbub\\AbstractCallback::_detectCallbackUrl",
+						"Zend\\Feed\\PubSubHubbub\\AbstractCallback::_getHttpHost"
+					]
+				}
+			]
+		},
+	],
+	"tecnickcom/tcpdf":[
+		{
+			"version": "<6.2.22",
+			"title": "Attackers can trigger deserialization of arbitrary data via the phar:// wrapper.",
+			"link": "https://github.com/tecnickcom/TCPDF/commit/1861e33fe05f653b67d070f7c106463e7a5c26ed",
+			"location": [
+				{
+					"Function":[
+						"TCPDF_IMAGES::_parsejpeg",
+						"TCPDF::Image",
+						"TCPDF_FONTS::addTTFfont",
+						"TCPDF_FONTS::_getfontpath",
+						"TCPDF_STATIC::fileGetContents",
+						"TCPDF::AddFont",
+						"TCPDF::Annotation"
+					]
+				}
+			],
+			"CVE": "CVE-2018-17057"
+		}
+	]
+}

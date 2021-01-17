@@ -1,0 +1,202 @@
+package tools.php.ast2cpg;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+
+import ast.php.functionDef.FunctionDef;
+import ast.php.functionDef.TopLevelFunctionDef;
+import cg.FileDependencyCheck;
+import cg.PHPCGFactory;
+import cg.toTopLevelFile;
+import inputModules.csv.csv2ast.ASTUnderConstruction;
+import misc.MultiHashMap;
+
+public class Debloat {
+	private MultiHashMap<Long, Long> callgraph = new MultiHashMap<Long, Long>();
+	private Set<Long> allFunIds = new HashSet<Long>();
+	private Set<Long> initialMethodIds = new HashSet<Long>();
+	private Set<String> cmds = new HashSet<String>();
+	private Set<Long> neededIds = new HashSet<Long>();
+	//private Set<Long> unNeededIds = new HashSet<Long>();
+	private MultiHashMap<String, Integer> line2remove = new MultiHashMap<String, Integer>();
+	private boolean isApplication;
+	
+	
+	Debloat(){
+		callgraph = PHPCGFactory.mtd2mtd;
+		//initialMethodIds.addAll(PHPCGFactory.topFunIds);
+		for(Long topFunid: PHPCGFactory.topFunIds) {
+			Long topId = toTopLevelFile.getTopLevelId(topFunid);
+			if(!ASTUnderConstruction.idToNode.get(topId).getFlags().equals("TOPLEVEL_FILE")) {
+				System.err.println("Fail to find top file for target function "+topId);
+				continue;
+			}
+			TopLevelFunctionDef topFile = (TopLevelFunctionDef) ASTUnderConstruction.idToNode.get(topId);
+			String phpPath = topFile.getName();
+			phpPath = phpPath.substring(1, phpPath.length()-1);
+			phpPath = phpPath.replace("//", "/");
+			
+			String baseDir = "/home/users/chluo/phpMyAdmin-4.7.0-all-languages";
+			if(FileDependencyCheck.excludeDirs.containsKey(baseDir))
+			for(String excludePath: FileDependencyCheck.excludeDirs.get(baseDir)) {
+				if(phpPath.contains(excludePath)) {
+					System.err.println(phpPath);
+					continue;
+				}
+			}
+			initialMethodIds.add(topFunid);
+		}
+		
+		allFunIds = new HashSet<Long>(PHPCGFactory.collectAllFun);
+		// TODO, add this commend line
+		cmds.add("/home/users/chluo/phpMyAdmin-4.7.0-all-languages/vendor");
+		// TODO, add this commend line
+		isApplication = true;
+	}
+	
+	public void handle() throws IOException {
+		//getNeedDirIds();
+		if(!getInitialMethod()) {
+			return;
+		}
+		getNeedIds();
+		
+		System.err.println("all "+allFunIds.size());
+		
+		allFunIds.removeAll(neededIds);
+		
+		System.err.println("unneeded: "+allFunIds.size());
+		System.err.println("initial: "+initialMethodIds.size());
+		System.err.println("needed "+neededIds.size());
+		
+		getRemoveLines();
+		removeLines(); 
+	}
+	
+	private void getRemoveLines() {
+		for(Long unNeedId: allFunIds) {
+			String path = getPath(unNeedId);
+			FunctionDef funDef = (FunctionDef) ASTUnderConstruction.idToNode.get(unNeedId);
+			int startline = funDef.getChild(2).getLocation().startLine;
+			startline=startline+1;
+			int endline = funDef.getLocation().endLine;
+			if(startline==endline) {
+				continue;
+			}
+			line2remove.add(path, startline);
+			line2remove.add(path, endline);
+		}
+		//System.err.println(line2remove);
+	}
+	
+	private void removeLines() throws IOException {
+		for(String path: line2remove.keySet()) {
+			List<Integer> lines = line2remove.get(path);
+			//Collections.sort(lines);
+			File inputFile = new File(path);
+			File tempFile = new File("myTempFile.php");
+			
+			BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+			BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+			
+			int crtLineno = 0;
+			boolean toStart=false;
+			String currentLine;
+			String errLine = "$trace = debug_backtrace();\r\n" + 
+					"	  var_dump(__FILE__);\r\n" + 
+					"	  var_dump(__FUNCTION__);\r\n" + 
+					"      print_r( $trace);\r\n" + 
+					"	  die();";
+			
+			while((currentLine = reader.readLine()) != null) {
+			    crtLineno++;
+			    if(lines.contains(crtLineno)) {
+			    	toStart = toStart^true;
+			    }
+			    if(toStart!=true) {
+			    	 writer.write(currentLine + System.getProperty("line.separator"));
+			    }
+			    else {
+			    	//writer.write(errLine + System.getProperty("line.separator"));
+			    }
+			}
+			writer.close(); 
+			reader.close();
+			
+			if(!tempFile.renameTo(inputFile)) {
+				System.err.println("Fail to debloat file "+path);
+			}
+		}
+	}
+	
+	private String getPath(Long FunctionId) {
+		String path = new String();
+		Long topId = toTopLevelFile.getTopLevelId(FunctionId);
+		TopLevelFunctionDef topFile = (TopLevelFunctionDef) ASTUnderConstruction.idToNode.get(topId);
+		path = topFile.getName();
+		path = path.substring(1, path.length()-1);
+		return path;
+	}
+	
+	//get which methods are initially needed
+	protected boolean getInitialMethod() {
+		for(Long funId: allFunIds) {
+			Long topId = toTopLevelFile.getTopLevelId(funId);
+			//FunctionDef funNode =  (FunctionDef) ASTUnderConstruction.idToNode.get(funId);
+			if(!ASTUnderConstruction.idToNode.get(topId).getFlags().equals("TOPLEVEL_FILE")) {
+				System.err.println("Fail to find top file for function "+funId);
+				return false;
+			}
+			TopLevelFunctionDef topFile = (TopLevelFunctionDef) ASTUnderConstruction.idToNode.get(topId);
+			String phpPath = topFile.getName();
+			phpPath = phpPath.substring(1, phpPath.length()-1);
+			//System.err.println(phpPath);
+			if(!isApplication && InCmdDir(phpPath) ||
+					isApplication && !InCmdDir(phpPath)) {
+				initialMethodIds.add(funId);
+			}
+		}
+		return true;
+	}
+	
+	//get all methods an app / a library needs
+	private void getNeedIds() {
+		Queue<Long> queue = new LinkedList<Long>(initialMethodIds);
+		while(!queue.isEmpty()) {
+			Long crtId = queue.peek();
+			if(callgraph.containsKey(crtId)) {
+				Set<Long> calledFuns = new HashSet<Long>(callgraph.get(crtId));
+				for(Long calledFun: calledFuns) {
+					if(!queue.contains(calledFun) && !neededIds.contains(calledFun)) {
+						queue.add(calledFun);
+						//System.err.println(crtId+" "+calledFun);
+					}
+				}
+			}
+			neededIds.add(queue.poll());
+		}
+	}
+	
+	private boolean InCmdDir(String path) {
+		String Unified_form_path = path.replace("//", "/");
+		for(String cmd: cmds) {
+			if(Unified_form_path.startsWith(cmd)) {
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
