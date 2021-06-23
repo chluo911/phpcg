@@ -1,6 +1,7 @@
 package tools.php.ast2cpg;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -120,6 +121,11 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 	public static HashMap<Long, Long> child2parent = new HashMap<Long, Long>();
 	public static HashMap<Long, HashMap<Integer, Long>> parent2child = new HashMap<Long, HashMap<Integer, Long>>();
 	public static HashMap<Long, String> collectUse = new HashMap<Long, String>();
+	public static Set<Long> collectAssign = new HashSet<Long>();
+	public static Set<Long> collectStatic = new HashSet<Long>();
+	public static Set<Long> collectRet = new HashSet<Long>();
+	public static Set<Long> collectFuncCall = new HashSet<Long>();
+	public static Set<Long> collectNew = new HashSet<Long>();
 	
 	@Override
 	public long handle(KeyedCSVRow row, ASTUnderConstruction ast)
@@ -608,7 +614,8 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 			default:
 				errno = 1;
 		}
-
+		
+		//collectFunc.add(startNode.getNodeId());
 		return errno;
 	}
 
@@ -677,6 +684,8 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 			default:
 				errno = 1;
 		}
+		
+		//collectFunc.add(startNode.getNodeId());
 
 		return errno;
 	}
@@ -700,7 +709,9 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 					startNode.addChild(endNode);
 				else {
 					startNode.setImplements((IdentifierList)endNode);
-					PHPCGFactory.inhe.add(startNode.getNodeId(), endNode.getNodeId());
+					for(int i=0; i<((IdentifierList) endNode).size(); i++) {
+						PHPCGFactory.inhe.add(startNode.getNodeId(), ((IdentifierList) endNode).getIdentifier(0).getNodeId());
+					}
 				}
 				break;
 			case 2: // toplevel child
@@ -1071,6 +1082,8 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 			default:
 				errno = 1;
 		}
+		
+		collectRet.add(startNode.getNodeId());
 
 		return errno;
 	}
@@ -1325,7 +1338,8 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 			default:
 				errno = 1;
 		}
-
+		
+		collectFuncCall.add(startNode.getNodeId());
 		return errno;
 	}
 
@@ -1368,11 +1382,11 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 			case 1: // expr child: Expression node
 				startNode.setRight((Expression)endNode);
 				break;
-
 			default:
 				errno = 1;
 		}
 
+		collectAssign.add(startNode.getNodeId());
 		return errno;
 	}
 
@@ -1392,7 +1406,8 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 			default:
 				errno = 1;
 		}
-
+		
+		collectAssign.add(startNode.getNodeId());
 		return errno;
 	}
 
@@ -1479,6 +1494,8 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 			default:
 				errno = 1;
 		}
+		
+		collectNew.add(startNode.getNodeId());
 
 		return errno;
 	}
@@ -1568,6 +1585,8 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 			default:
 				errno = 1;
 		}
+		
+		collectStatic.add(startNode.getNodeId());
 
 		return errno;
 	}
@@ -1942,6 +1961,8 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 			default:
 				errno = 1;
 		}
+		
+		collectFuncCall.add(startNode.getNodeId());
 
 		return errno;
 	}
@@ -1965,6 +1986,8 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 			default:
 				errno = 1;
 		}
+		
+		collectFuncCall.add(startNode.getNodeId());
 
 		return errno;
 	}

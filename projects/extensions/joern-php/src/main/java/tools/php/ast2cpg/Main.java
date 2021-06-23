@@ -2,6 +2,7 @@ package tools.php.ast2cpg;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashSet;
 
 import org.apache.commons.cli.ParseException;
 
@@ -82,9 +83,9 @@ public class Main {
 
 		// let's go...
 		FunctionDef rootnode;
+		HashSet<FunctionDef> rootSet = new HashSet<FunctionDef>();
 		while ((rootnode = (FunctionDef)extractor.getNextFunction()) != null) {
-
-			PHPCGFactory.addFunctionDef( rootnode);
+			rootSet.add(rootnode);
 
 			CFG cfg = ast2cfgConverter.convert(rootnode);
 			csvCFGExporter.writeCFGEdges(cfg);
@@ -94,18 +95,20 @@ public class Main {
 			DDG ddg = ddgCreator.createForDefUseCFG(defUseCFG);
 			csvDDGExporter.writeDDGEdges(ddg);
 		}
-
+		for(FunctionDef root: rootSet) {
+			PHPCGFactory.addFunctionDef( root);
+		}
 		// now that we wrapped up all functions, let's finish off with the call graph
 		CG cg = PHPCGFactory.newInstance();
 		csvCGExporter.writeCGEdges(cg);
 		
 		//Prune call graph
 		//PruneCG();
-		PruneCG.handle();
+		//PruneCG.handle();
 		
 		// let debloat something
-		Debloat debloat = new Debloat();
-		debloat.handle();
+		//Debloat debloat = new Debloat();
+		//debloat.handle();
 		
 		//ParseCG parseCG = new ParseCG();
 		//parseCG.parse();
