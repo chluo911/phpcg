@@ -46,6 +46,9 @@ public class StaticAnalysis  {
 	public static Set<Stack<Long>> vulPaths = new HashSet<Stack<Long>>();
 	public static Long ID = null;
 	public static MultiHashMap<String, Long> name2Stmt = new MultiHashMap<String, Long>();
+	//we only step into the function 
+	public static MultiHashMap<String, Long> name2Func = new MultiHashMap<String, Long>();
+	public static MultiHashMap<Long, Long> caller2callee = new MultiHashMap<Long, Long>();
 	
 	public StaticAnalysis() {
 		init();
@@ -108,6 +111,9 @@ public class StaticAnalysis  {
 				if(arrayName.getProperty("type").equals("string") && arrayName.getEscapedCodeStr().equals("GLOBALS")) {
 					srcGlobal.add(stmt, tmp);
 					srcGlobalSet.add(tmp);
+					Long funcID = stmtNode.getFuncId();
+					String iden = getPropIdentity(stmtNode, (long) 0);
+					name2Func(iden, funcID);
 				}
 				else {
 					srcDim.add(stmt, tmp);
@@ -118,6 +124,9 @@ public class StaticAnalysis  {
 				ASTNode arrayName = ASTUnderConstruction.idToNode.get(dim+2);
 				if(arrayName.getProperty("type").equals("string") && arrayName.getEscapedCodeStr().equals("GLOBALS")) {
 					dstGlobal.add(stmt, tmp1);
+					Long funcID = stmtNode.getFuncId();
+					String iden = getPropIdentity(stmtNode, (long) 0);
+					name2Func(iden, funcID);
 				}
 			}
 		}
@@ -140,16 +149,26 @@ public class StaticAnalysis  {
 					else if(leftHandId.equals(prop)){
 						dstProp.add(stmt, prop);
 					}
+					//get the function of prop
+					Long funcID = stmtNode.getFuncId();
+					String iden = getPropIdentity(stmtNode, (long) 0);
+					name2Func(iden, funcID);
 				}
 				//it is a function call
 				else if(stmtNode instanceof CallExpressionBase) {
 					srcProp.add(stmt, prop);
 					srcPropSet.add(prop);
+					Long funcID = stmtNode.getFuncId();
+					String iden = getPropIdentity(stmtNode, (long) 0);
+					name2Func(iden, funcID);
 				}
 				//it is a return node
 				else if(stmtNode instanceof ReturnStatement) {
 					srcProp.add(stmt, prop);
 					srcPropSet.add(prop);
+					Long funcID = stmtNode.getFuncId();
+					String iden = getPropIdentity(stmtNode, (long) 0);
+					name2Func(iden, funcID);
 				}
 			} catch(Exception e){
 				//System.err.println("Unknown assignment: "+stmt);
@@ -177,6 +196,41 @@ public class StaticAnalysis  {
 		
 	}
 	
+	private void name2Func(String inter, Long func) {
+		Set<Long> related = getAllcallee(func);
+		for(Long relate: related) {
+			name2Func.add(inter, relate);
+		}
+	}
+	
+	
+
+	private Set<Long> getAllcallee(Long func) {
+		if(caller2callee.containsKey(func)) {
+			HashSet<Long> ret=new HashSet<Long>(caller2callee.get(func));
+			return ret;
+		}
+		else {
+			HashSet<Long> ret=new HashSet<Long>();
+			Queue<Long> que = new LinkedList<Long>();
+			que.add(func);
+			while(!que.isEmpty()) {
+				Long node = que.poll();
+				ret.add(node);
+				if(PHPCGFactory.mtd2mtd.containsKey(node)) {
+					List<Long> callees = PHPCGFactory.mtd2mtd.get(node);
+					for(Long callee: callees) {
+						if(!ret.contains(callee)) {
+							que.add(callee);
+						}
+					}
+				}
+			}
+			caller2callee.addAll(func, (List<Long>) ret);
+			return ret;
+		}
+	}
+
 	//check if the source is a taint variable
 	private boolean isSource(Long astId) {
 		while(PHPCSVEdgeInterpreter.child2parent.containsKey(astId)) {
@@ -438,10 +492,34 @@ public class StaticAnalysis  {
 							Long nextId = (long) -1;
 							//the param is not tainted
 							if(intro.isEmpty()) {
-								ASTNode nextstmt = funcNode.getContent().getStatement(0);
-								nextId = nextstmt.getNodeId();
-								Node nextNode = new Node(++ID, nextId, node.inter, intro, callStack);
-								traverse(nextNode, false);
+								boolean flag = false;
+								for(String inter: node.inter.keySet()) {
+									//the inter variables are used in the function
+									if((name2Func.containsKey(inter) && name2Func.get(inter).contains(func))) {
+										flag=true;
+										break;
+									}
+								}
+								//the function is related
+								if(flag==true) {
+									ASTNode nextstmt = funcNode.getContent().getStatement(0);
+									nextId = nextstmt.getNodeId();
+									Node nextNode = new Node(++ID, nextId, node.inter, intro, callStack);
+									traverse(nextNode, false);
+								}
+								else {
+									for(Long next: CSVCFGExporter.cfgSave.get(stmt)) {
+										Set<Long> save=node.intro;
+										Stack<Long> stack =(Stack<Long>) node.caller.clone();
+										//we do not backwardly analyze, unless it is an exit node 
+										if(next<=node.astId && CSVCFGExporter.cfgSave.containsKey(next)) {
+											continue;
+										}
+										Node nextNode = new Node(++ID, next, node.inter, save, stack);
+										traverse(nextNode, false);
+									}
+									return false;
+								}
 							}
 							else {
 								Node nextNode = null;
@@ -573,10 +651,34 @@ public class StaticAnalysis  {
 							//the param is not tainted
 							Long nextId = (long) -1;
 							if(intro.isEmpty()) {
-								ASTNode nextstmt = funcNode.getContent().getStatement(0);
-								nextId = nextstmt.getNodeId();
-								Node nextNode = new Node(++ID, nextId, node.inter, intro, callStack);
-								traverse(nextNode, false);
+								boolean flag = false;
+								for(String inter: node.inter.keySet()) {
+									//the inter variables are used in the function
+									if((name2Func.containsKey(inter) && name2Func.get(inter).contains(func))) {
+										flag=true;
+										break;
+									}
+								}
+								//the function is related
+								if(flag==true) {
+									ASTNode nextstmt = funcNode.getContent().getStatement(0);
+									nextId = nextstmt.getNodeId();
+									Node nextNode = new Node(++ID, nextId, node.inter, intro, callStack);
+									traverse(nextNode, false);
+								}
+								else {
+									for(Long next: CSVCFGExporter.cfgSave.get(stmt)) {
+										Set<Long> save=node.intro;
+										Stack<Long> stack =(Stack<Long>) node.caller.clone();
+										//we do not backwardly analyze, unless it is an exit node 
+										if(next<=node.astId && CSVCFGExporter.cfgSave.containsKey(next)) {
+											continue;
+										}
+										Node nextNode = new Node(++ID, next, node.inter, save, stack);
+										traverse(nextNode, false);
+									}
+									return false;
+								}
 							}
 							else {
 								Node nextNode = null;
@@ -595,14 +697,19 @@ public class StaticAnalysis  {
 					}
 					//the statement is a return statement
 					else if(stmtNode instanceof ReturnStatement) {
-						//we don't know the caller
+						//we don't know the caller, return to exit Node
 						if(node.caller.isEmpty()) {
-							Long stmtID = node.astId;
-							Long funcID = ASTUnderConstruction.idToNode.get(stmtID).getFuncId();
-							List<Long> callers = PHPCGFactory.mtd2call.get(funcID);
-							for(Long caller: callers) {
-								
+							for(Long next: CSVCFGExporter.cfgSave.get(stmt)) {
+								Set<Long> save=node.intro;
+								Stack<Long> stack =(Stack<Long>) node.caller.clone();
+								//we do not backwardly analyze, unless it is an exit node 
+								if(next<=node.astId && CSVCFGExporter.cfgSave.containsKey(next)) {
+									continue;
+								}
+								Node nextNode = new Node(++ID, next, node.inter, save, stack);
+								traverse(nextNode, false);
 							}
+							return false;
 						}
 						Long caller = node.caller.peek();
 						Node callerNode = ID2Node.get(caller);
@@ -730,14 +837,13 @@ public class StaticAnalysis  {
 		//we do not end here, instead we iterate the next statement related to inter variable
 		else if(node.caller==null || node.caller.isEmpty()) {
 			//find next related statements
-			if(!node.inter.isEmpty()) {
+			if(!node.inter.isEmpty() || !node.intro.isEmpty()) {
 				//the irs caller statements
 				Long funcID = ASTUnderConstruction.idToNode.get(node.astId+1).getFuncId();
 				//the top level function
 				if(!PHPCGFactory.mtd2call.containsKey(funcID)) {
 					return taintFunc;
 				}
-				Set<Long> intro = new HashSet<Long>();
 				//get the possible caller
 				Set<Long> callers  = new HashSet<Long>(PHPCGFactory.mtd2call.get(funcID));
 				for(String iden: node.inter.keySet()) {
@@ -747,7 +853,11 @@ public class StaticAnalysis  {
 						//the source stmt;
 						//get the next related statement
 						for(Long call: callers) {
+							Set<Long> intro = new HashSet<Long>();
 							Long stmtID = getStatement(call);
+							if(!node.intro.isEmpty()) {
+								intro.add(stmtID);
+							}
 							if(CSVCFGExporter.cfgSave.containsKey(stmtID)) {
 								List<Long> nextStmts = CSVCFGExporter.cfgSave.get(stmtID);
 								for(Long next: nextStmts) {
@@ -1180,3 +1290,4 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
