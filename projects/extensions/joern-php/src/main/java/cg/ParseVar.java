@@ -157,6 +157,9 @@ public class ParseVar {
 			ReturnStatement returnNode = (ReturnStatement) ASTUnderConstruction.idToNode.get(returnNodeId);
 			Long funcId = returnNode.getFuncId();
 			Expression ReturnValueNode = returnNode.getReturnExpression();
+			if(ReturnValueNode==null) {
+				continue;
+			}
 			func2Ret.add(funcId, ReturnValueNode.getNodeId());
 			String returnValue = "*";
 			
@@ -887,9 +890,17 @@ public class ParseVar {
 		else if(child.getProperty("type").equals("string")) {
 			//$var => var
 			varName = child.getEscapedCodeStr();
+			//$this
+			if(varName.equals("this") && isClass==true) {
+				String className = ASTUnderConstruction.idToNode.get(varId).getEnclosingClass();
+				String namespace = ASTUnderConstruction.idToNode.get(varId).getEnclosingNamespace();
+				String classID = PHPCGFactory.getClassId(className, varId, className).toString();
+				ret.add(classID);
+				return ret;
+			}
 		}
 		else {
-			System.out.println("Unsupport variable name: "+varId);
+			//System.err.println("Unsupport variable name: "+varId);
 			return ret1;
 		}
 		
@@ -993,7 +1004,7 @@ public class ParseVar {
 			}
 			break;
 		default:
-			System.out.println("Unknown root statement type "+Stmtid+" "+rootType);
+			System.err.println("Unknown root statement type "+Stmtid+" "+rootType);
 		}
 		//it is not defined within the function
 		return expValue;

@@ -60,7 +60,7 @@ public class CSVCFGExporter extends CFGExporter
 				Long dstId = (dst instanceof ASTNodeContainer) ? ((ASTNodeContainer)dst).getASTNode().getNodeId()
 						: ((AbstractCFGNode)dst).getNodeId();
 				
-				cfgSave.add(dstId, srcId);
+				cfgSave.add(srcId, dstId);
 				
 				Writer.setIdForObject(src, srcId);
 				Writer.setIdForObject(dst, dstId);

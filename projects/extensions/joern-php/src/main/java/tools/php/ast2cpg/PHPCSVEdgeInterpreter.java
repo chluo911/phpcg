@@ -1,10 +1,10 @@
 package tools.php.ast2cpg;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
-
 import ast.ASTNode;
 import ast.NullNode;
 import ast.expressions.ArgumentList;
@@ -106,7 +106,6 @@ import ast.statements.jump.GotoStatement;
 import ast.statements.jump.ReturnStatement;
 import ast.statements.jump.ThrowStatement;
 import cg.PHPCGFactory;
-import cg.ParseVar;
 import cg.PruneCG;
 import cg.toTopLevelFile;
 import inputModules.csv.PHPCSVEdgeTypes;
@@ -126,6 +125,13 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 	public static Set<Long> collectRet = new HashSet<Long>();
 	public static Set<Long> collectFuncCall = new HashSet<Long>();
 	public static Set<Long> collectNew = new HashSet<Long>();
+	public static List<String> user_input = Arrays.asList(new String[] {"_GET", "_POST", "_COOKIE", "_REQUEST", "_ENV", "HTTP_ENV_VARS", "HTTP_POST_VARS", "HTTP_GET_VARS"});
+	public static List<String> repairs = Arrays.asList(new String[] {"md5", "addslashes", "mysqli_real_escape_string", "mysql_escape_string"});
+	public static Set<Long> sources = new HashSet<Long>();
+	public static Set<Long> sqlSanitizers = new HashSet<Long>();
+	public static Set<Long> property = new HashSet<Long>();
+	public static Set<Long> globalVar = new HashSet<Long>();
+	public static Set<Long> dimVar = new HashSet<Long>();
 	
 	@Override
 	public long handle(KeyedCSVRow row, ASTUnderConstruction ast)
@@ -736,6 +742,10 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 		{
 			case 0: // name child
 				startNode.setNameExpression((Expression)endNode);
+				String varName = endNode.getEscapedCodeStr();
+				if(user_input.contains(varName)) {
+					sources.add(startNode.getNodeId());
+				}
 				break;
 
 			default:
@@ -787,6 +797,9 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 		{
 			case 0: // expr child
 				startNode.setCastExpression((Expression)endNode);
+				if(startNode.getFlags().equals("TYPE_LONG")) {
+					sqlSanitizers.add(startNode.getNodeId());
+				}
 				break;
 
 			default:
@@ -1258,6 +1271,7 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 	{
 		int errno = 0;
 
+		dimVar.add(startNode.getNodeId());
 		switch (childnum)
 		{
 			case 0: // expr child: Expression node
@@ -1281,6 +1295,7 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 	{
 		int errno = 0;
 
+		property.add(startNode.getNodeId());
 		switch (childnum)
 		{
 			case 0: // expr child: Expression node
@@ -1301,6 +1316,7 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 	{
 		int errno = 0;
 
+		property.add(startNode.getNodeId());
 		switch (childnum)
 		{
 			case 0: // class child: Expression node
@@ -1325,10 +1341,15 @@ public class PHPCSVEdgeInterpreter implements CSVRowInterpreter
 		{
 			case 0: // expr child: Expression node
 				startNode.setTargetFunc((Expression)endNode);
-				if(endNode instanceof Identifier &&
-						((Identifier) endNode).getNameChild().getEscapedCodeStr().equals("func_get_args")) {
-					Long funid = startNode.getFuncId();
-					PHPCGFactory.func_get_args.add(funid);
+				if(endNode instanceof Identifier) {
+					String funcName = ((Identifier) endNode).getNameChild().getEscapedCodeStr();
+					if(funcName.equals("func_get_args")) {
+						Long funid = startNode.getFuncId();
+						PHPCGFactory.func_get_args.add(funid);
+					}
+					else if(repairs.contains(funcName)) {
+						sqlSanitizers.add(startNode.getNodeId());
+					}
 				}
 				break;
 			case 1: // args child: ArgumentList node

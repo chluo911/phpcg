@@ -1,12 +1,15 @@
 package cg;
 
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -111,7 +114,7 @@ public class PHPCGFactory {
 	public static Set<String> initial = new HashSet<String>();
 	public static Set<Long> suspicious = new HashSet<Long>();
 	
-	public static Set<Long> Abstract = new HashSet<Long>();
+	public static Set<Long> Abstract = new TreeSet<Long>();
 	
 	//public static MultiHashMap<String, FunctionDef> name2Def = new MultiHashMap<String, FunctionDef>();
 	
@@ -123,6 +126,7 @@ public class PHPCGFactory {
 	public static HashMap<Long, Long> retCls = new HashMap<Long, Long>();
 	//public static Set<String> indirect = new HashSet<String>();
 	public static HashSet<Long> sinks = new HashSet<Long>();
+	public static List<Long> objCaller = new ArrayList<Long>();
 	
 	//public static Set<FunctionDef> constructSet = new HashSet<FunctionDef>();
 	/**
@@ -301,15 +305,7 @@ public class PHPCGFactory {
 			//System.err.println(x1+" "+c1+" "+functionCall.getNodeId());
 			c1.incrementAndGet();
 			System.err.println("function: "+c1+" "+x1);
-			//includes all functions in phtml since they will be included by php files 
-			lockp.lock();
-	        try {
-	        	if(getDir(functionCall.getNodeId()).endsWith(".phtml")) {
-	        		ignoreIds.put(functionCall.getFuncId(), (long)1);
-	        	}
-	        } finally {
-	        	lockp.unlock();
-	        }
+			
 			// make sure the call target is statically known
 			if( functionCall.getTargetFunc() instanceof Identifier) {
 				
@@ -323,6 +319,11 @@ public class PHPCGFactory {
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("sqlite_query")) {
 					ASTNode firstArg = functionCall.getArgumentList().getArgument(0);
 					sinks.add(firstArg.getNodeId());
+				}
+				
+				//we ignore test files
+				if(filterTest(callIdentifier.getNameChild().getEscapedCodeStr())) {
+					return;
 				}
 				
 				//callback in built-in functions
@@ -533,9 +534,18 @@ public class PHPCGFactory {
 		});
 	}
 	
+	private static boolean filterTest(String escapedCodeStr) {
+		if(escapedCodeStr != null &&
+				(escapedCodeStr.contains("Test") || escapedCodeStr.contains("test"))) {
+			return true;
+		}
+		return false;
+	}
+
 	private static void createConstructorCallEdges(CG cg) {
 		int x3=constructorCalls.size();
 		AtomicInteger c3 = new AtomicInteger(0);
+		
 		//for( NewExpression constructorCall : constructorCalls) {
 		constructorCalls.parallelStream().forEach(constructorCall -> {
 			c3.incrementAndGet();
@@ -546,6 +556,13 @@ public class PHPCGFactory {
 				Identifier classIdentifier = (Identifier)constructorCall.getTargetClass();
 				String constructorKey = classIdentifier.getNameChild().getEscapedCodeStr();
 				String nameSpace = classIdentifier.getEnclosingNamespace();
+				
+				//we ignore test files
+				if(filterTest(constructorKey) ||
+						filterTest(constructorCall.getEnclosingClass()) ||
+						filterTest(getDir(constructorCall.getNodeId()))) {
+					return;
+				}
 				
 				// if class identifier is fully qualified,
 				// just look for the constructor's definition right away
@@ -656,6 +673,12 @@ public class PHPCGFactory {
 				Identifier classIdentifier = (Identifier)staticCall.getTargetClass();
 				StringExpression methodName = (StringExpression)staticCall.getTargetFunc();
 				
+				if(filterTest(classIdentifier.getNameChild().getEscapedCodeStr()) ||
+						filterTest(staticCall.getEnclosingClass()) ||
+						filterTest(getDir(staticCall.getNodeId()))){
+					return;
+				}
+				
 				getStaticCall(classIdentifier, methodName.getEscapedCodeStr(), cg, staticCall);
 			}
 			//class name is a variable or method name is a variable
@@ -703,6 +726,7 @@ public class PHPCGFactory {
 	
 	//given the method name, we get the target method
 	private static void withMethodKey(CG cg, MethodCallExpression callsite, String methodkey) {
+		//the object is a variable
 		if(callsite.getTargetObject() instanceof Variable
 				|| callsite.getTargetFunc() instanceof PropertyExpression
 				|| callsite.getTargetFunc() instanceof StaticPropertyExpression){
@@ -738,6 +762,10 @@ public class PHPCGFactory {
 				addCallEdgeIfDefinitionKnown(cg, nonStaticMethodDefs, callsite, methodKey, false);
 			}
 		}
+		//the object is returned from a function
+		else if(callsite.getTargetObject() instanceof CallExpressionBase) {
+			objCaller.add(callsite.getNodeId());
+		}
 		//We don't parse variables with strange representation 
 		else { 
 			System.err.println("Unsopported method call: "+callsite.getNodeId());
@@ -751,6 +779,11 @@ public class PHPCGFactory {
 		nonStaticMethodCalls.parallelStream().forEach(methodCall -> {
 			c4.getAndIncrement();
 			System.err.println(x4+" "+c4+" "+methodCall.getNodeId());
+			
+			if(filterTest(methodCall.getEnclosingClass()) ||
+					filterTest(getDir(methodCall.getNodeId()))) {
+				return;
+			}
 			
 			//method name is a string
 			if( methodCall.getTargetFunc() instanceof StringExpression) {
@@ -814,10 +847,6 @@ public class PHPCGFactory {
 					}
 					
 				}
-				//the target method name is not defined  
-				else {
-					//System.err.println("Fail to find target method name for method"+ " called at "+methodCall.getNodeId());
-				}
 			}
 			
 			//$var->$name
@@ -875,7 +904,35 @@ public class PHPCGFactory {
 				
 				//System.err.println("Statically unknown non-static method call at node id " + methodCall.getNodeId());
 			}
+			
 		});
+		
+		Collections.sort(objCaller);
+		Collections.reverse(objCaller);
+		for(Long callsiteID: objCaller) {
+			MethodCallExpression callsite = (MethodCallExpression) ASTUnderConstruction.idToNode.get(callsiteID);
+			//obj variable
+			Long caller = callsite.getTargetObject().getNodeId();
+			//methodname
+			StringExpression methodName = (StringExpression) (callsite.getTargetFunc());
+			String methodKey = methodName.getEscapedCodeStr();
+			
+			lock.lock();
+	        try {
+	        	if(call2mtd.containsKey(caller)) {
+	        		Set<Long> targetFuncs = new HashSet<Long>(call2mtd.get(caller));
+	        		for(Long fun: targetFuncs) {
+	        			if(retCls.containsKey(fun)) {
+	        				Long classId = retCls.get(fun);
+	        				methodKey = classId+"::"+methodKey;
+	        				addCallEdgeIfDefinitionKnown(cg, nonStaticMethodDefs, callsite, methodKey, false);
+	        			}
+	        		}
+	        	}
+	        } finally {
+	            lock.unlock();
+	        }
+		}
 	}
 	
 	private static Set<String> getMethodName(CallExpressionBase callsite){
@@ -1021,6 +1078,12 @@ public class PHPCGFactory {
 		//third-party code cannot call first-party code
 		if(getDir(functionCall.getNodeId()).contains("vendor")
 				&& !getDir(functionDef.getNodeId()).contains("vendor")) {
+			return false;
+		}
+		
+		if(filterTest(functionDef.getName()) ||
+				filterTest(functionDef.getEnclosingClass()) ||
+				filterTest(getDir(functionDef.getNodeId()))) {
 			return false;
 		}
 		

@@ -106,12 +106,7 @@ public class Main {
 		//PruneCG();
 		//PruneCG.handle();
 		
-		// let debloat something
-		//Debloat debloat = new Debloat();
-		//debloat.handle();
-		
-		//ParseCG parseCG = new ParseCG();
-		//parseCG.parse();
+		StaticAnalysis detecter = new StaticAnalysis();
 		
 		csvWriter.closeEdgeFile();
 		cgcsvWriter.closeEdgeFile();

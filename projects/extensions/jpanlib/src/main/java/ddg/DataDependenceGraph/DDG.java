@@ -5,8 +5,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
 import ast.ASTNode;
+import misc.MultiHashMap;
+import misc.Pair;
+import tools.php.ast2cpg.Node;
 
 public class DDG
 {
@@ -14,6 +16,8 @@ public class DDG
 	private Set<DefUseRelation> defUseEdges = new HashSet<DefUseRelation>();
 	//find src note with dst node and symbol 
 	public static HashMap<String, LinkedList<Long>> Locate = new HashMap<String, LinkedList<Long>>();
+	public static MultiHashMap<Long, Pair<Long, String>> rels = new MultiHashMap<Long, Pair<Long, String>>();
+	
 
 	public Set<DefUseRelation> getDefUseEdges()
 	{
@@ -27,6 +31,7 @@ public class DDG
 		
 		Long tmpSrcId = ((ASTNode) srcId).getNodeId();
 		Long tmpDstId = ((ASTNode) dstId).getNodeId();
+		rels.add(tmpSrcId, new Pair<Long, String>(tmpDstId, symbol));
 		if (Locate.containsKey(tmpDstId.toString()+"_"+symbol)) {
 			Locate.get(tmpDstId.toString()+"_"+symbol).add(tmpSrcId);
 		}
