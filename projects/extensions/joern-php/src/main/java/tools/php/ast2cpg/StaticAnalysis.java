@@ -226,7 +226,9 @@ public class StaticAnalysis  {
 					}
 				}
 			}
-			caller2callee.addAll(func, (List<Long>) ret);
+			for(Long node: ret) {
+				caller2callee.add(func, node);
+			}
 			return ret;
 		}
 	}
@@ -387,6 +389,7 @@ public class StaticAnalysis  {
 					}
 					nextNode=new Node(++ID, next, newInter, intro, stack);
 					traverse(nextNode, false);
+					break;
 				}
 			}
 			//the statement is not sanitized
@@ -409,6 +412,7 @@ public class StaticAnalysis  {
 						}
 						Node nextNode = new Node(++ID, next, newNode.inter, intro, stack);
 						traverse(nextNode, false);
+						break;
 					}
 				}
 				else{
@@ -448,6 +452,7 @@ public class StaticAnalysis  {
 								}
 								Node nextNode = new Node(++ID, next, node.inter, intro, stack);
 								traverse(nextNode, false);
+								break;
 							}
 							return false;
 						}
@@ -517,6 +522,7 @@ public class StaticAnalysis  {
 										}
 										Node nextNode = new Node(++ID, next, node.inter, save, stack);
 										traverse(nextNode, false);
+										break;
 									}
 									return false;
 								}
@@ -577,6 +583,7 @@ public class StaticAnalysis  {
 									}
 									Node nextNode = new Node(++ID, next, newInter, intro, stack);
 									traverse(nextNode, false);
+									break;
 								}
 								return false;
 							}
@@ -605,6 +612,7 @@ public class StaticAnalysis  {
 									}
 									Node nextNode = new Node(++ID, next, tmp.inter, save, stack);
 									traverse(nextNode, false);
+									break;
 								}
 							}
 						}
@@ -676,6 +684,7 @@ public class StaticAnalysis  {
 										}
 										Node nextNode = new Node(++ID, next, node.inter, save, stack);
 										traverse(nextNode, false);
+										break;
 									}
 									return false;
 								}
@@ -708,6 +717,7 @@ public class StaticAnalysis  {
 								}
 								Node nextNode = new Node(++ID, next, node.inter, save, stack);
 								traverse(nextNode, false);
+								break;
 							}
 							return false;
 						}
@@ -736,6 +746,7 @@ public class StaticAnalysis  {
 								//the next statement is a exit statement
 								Node nextNode = new Node(++ID, next, tmp.inter, save, callerNode.caller);
 								traverse(nextNode, false);
+								break;
 							}
 						}
 						//the return value is not tainted
@@ -746,6 +757,7 @@ public class StaticAnalysis  {
 								Node nextNode = new Node(++ID, next, node.inter, callerNode.intro, callerNode.caller);
 								//iterate
 								traverse(nextNode, false);
+								break;
 							}
 						}
 					}
@@ -788,6 +800,7 @@ public class StaticAnalysis  {
 								Node nextNode = new Node(++ID, next, newInter, intro, stack);
 								//iterate
 								traverse(nextNode, false);
+								break;
 							}
 						}
 						else {
@@ -816,6 +829,7 @@ public class StaticAnalysis  {
 								//
 								Node nextNode = new Node(++ID, next, tmp.inter, save, stack);
 								traverse(nextNode, false);
+								break;
 							}
 						}
 					}
@@ -863,6 +877,7 @@ public class StaticAnalysis  {
 								for(Long next: nextStmts) {
 									Node nextNode = new Node(++ID, next, node.inter, intro, node.caller);
 									traverse(nextNode, false);
+									break;
 								}
 							}
 						}
@@ -1290,4 +1305,5 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
