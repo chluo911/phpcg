@@ -924,8 +924,12 @@ public class PHPCGFactory {
 	        		for(Long fun: targetFuncs) {
 	        			if(retCls.containsKey(fun)) {
 	        				Long classId = retCls.get(fun);
-	        				methodKey = classId+"::"+methodKey;
-	        				addCallEdgeIfDefinitionKnown(cg, nonStaticMethodDefs, callsite, methodKey, false);
+	        				Set<Long> allChild = PHPCGFactory.getAllChild(classId);
+	    					allChild.add(classId);
+	    					for(Long clsId: allChild) {
+	    						methodKey = clsId+"::"+methodKey;
+		        				addCallEdgeIfDefinitionKnown(cg, nonStaticMethodDefs, callsite, methodKey, false);
+	    					}
 	        			}
 	        		}
 	        	}
@@ -1150,6 +1154,10 @@ public class PHPCGFactory {
 		try {
 			CGNode caller = new CGNode(functionCall);
 			CGNode callee = new CGNode(functionDef);
+			//the caller cannot call it self
+			if(functionCall.getFuncId().equals(functionDef.getNodeId())) {
+				return true;
+			}
 			if(!(call2mtd.containsKey(functionCall.getNodeId()) && call2mtd.get(functionCall.getNodeId()).contains(functionDef.getNodeId()))) {
 				call2mtd.add(functionCall.getNodeId(), functionDef.getNodeId());
 				mtd2call.add(functionDef.getNodeId(), functionCall.getNodeId());
@@ -1402,5 +1410,6 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
