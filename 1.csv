@@ -1,3 +1,4 @@
+Maximum: 3283 987
 null param: 2674290
 null param: 2544306
 null param: 2544306
@@ -8,70 +9,235 @@ null param: 2544306
 null param: 2544306
 null param: 2544306
 null param: 2678640
-parse stmt: 1146900
-parse stmt: 1147031
+parse stmt: 1 1146900 {} [] []
+parse stmt: 5 1147031 {} [] []
 Completed
-parse stmt: 197134
-parse stmt: 197151
-parse stmt: 197081
-parse stmt: 1114284
-parse stmt: 1114293
+parse stmt: 1 197134 {} [] []
+parse stmt: 2 197151 {1602013::data=1} [] []
+parse stmt: 3 197081 {1602013::data=1} [] []
+parse stmt: 4 1114284 {1602013::data=1} [] []
+parse stmt: 5 1114293 {1602013::data=1} [] []
 next1: 1114300
 next1: 1114307
 next1: 1114318
 next1: 1114325
 next1: 1114333
-parse stmt: 1114333
-parse stmt: 1114348
+parse stmt: 10 1114333 {1602013::data=1} [] []
+parse stmt: 11 1114348 {1602013::data=1} [] []
 next1: 1114365
 next1: 1114374
-parse stmt: 1114374
+parse stmt: 13 1114374 {1602013::data=1} [] []
 next1: 1114388
-parse stmt: 1114388
-parse stmt: 1114398
-parse stmt: 1114223
-parse stmt: 1602239
-parse stmt: 1602124
-parse stmt: 1800769
+parse stmt: 14 1114388 {1602013::data=1} [] []
+parse stmt: 15 1114398 {1602013::data=1} [] []
+parse stmt: 16 1114223 {1602013::data=1} [] []
+parse stmt: 17 1602239 {1602013::data=1} [] []
+parse stmt: 18 1602124 {1602013::data=1} [] []
+parse stmt: 19 1800769 {1602013::data=1} [] []
 next1: 1800776
-parse stmt: 1800776
-parse stmt: 1800787
-parse stmt: 1800809
-parse stmt: 1800787
-parse stmt: 1800809
-parse stmt: 1800776
-parse stmt: 1800787
-parse stmt: 1800809
-parse stmt: 197276
-parse stmt: 197161
-parse stmt: 1800769
+parse stmt: 20 1800776 {1602013::data=1} [] []
+parse stmt: 21 1800787 {1602013::data=1} [] []
+parse stmt: 22 1800809 {1602013::data=1} [] []
+parse stmt: 24 1800823 {1602013::data=1} [] []
+next1: 1800836
+parse stmt: 25 1800836 {1602013::data=1} [] []
+parse stmt: 26 1800787 {1602013::data=1} [] []
+parse stmt: 27 1800809 {1602013::data=1} [] []
+parse stmt: 29 1800823 {1602013::data=1} [] []
+next1: 1800836
+parse stmt: 30 1800836 {1602013::data=1} [] []
+parse stmt: 31 1800776 {1602013::data=1} [] []
+parse stmt: 32 1800787 {1602013::data=1} [] []
+parse stmt: 33 1800809 {1602013::data=1} [] []
+parse stmt: 35 1800823 {1602013::data=1} [] []
+next1: 1800836
+parse stmt: 36 1800836 {1602013::data=1} [] []
+parse stmt: 37 197276 {1602013::data=1} [] []
+parse stmt: 38 197161 {1602013::data=1} [] []
+parse stmt: 39 1800769 {1602013::data=1} [] []
 next1: 1800776
-parse stmt: 1800776
-parse stmt: 1800787
-parse stmt: 1800809
-parse stmt: 1800787
-parse stmt: 1800809
-parse stmt: 1800776
-parse stmt: 1800787
-parse stmt: 1800809
-parse stmt: 1437023
-parse stmt: 1437029
-parse stmt: 1437056
-parse stmt: 1437075
+parse stmt: 40 1800776 {1602013::data=1} [] []
+parse stmt: 41 1800787 {1602013::data=1} [] []
+parse stmt: 42 1800809 {1602013::data=1} [] []
+parse stmt: 44 1800823 {1602013::data=1} [] []
+next1: 1800836
+parse stmt: 45 1800836 {1602013::data=1} [] []
+parse stmt: 46 1800787 {1602013::data=1} [] []
+parse stmt: 47 1800809 {1602013::data=1} [] []
+parse stmt: 49 1800823 {1602013::data=1} [] []
+next1: 1800836
+parse stmt: 50 1800836 {1602013::data=1} [] []
+parse stmt: 51 1800776 {1602013::data=1} [] []
+parse stmt: 52 1800787 {1602013::data=1} [] []
+parse stmt: 53 1800809 {1602013::data=1} [] []
+parse stmt: 55 1800823 {1602013::data=1} [] []
+next1: 1800836
+parse stmt: 56 1800836 {1602013::data=1} [] []
+parse stmt: 57 1437023 {1602013::data=1} [] []
+parse stmt: 58 1437029 {1602013::data=1} [] []
+parse stmt: 60 1437056 {1602013::data=1} [] []
+parse stmt: 61 1437075 {1602013::data=1} [] []
 next1: 1437085
-parse stmt: 1437085
+parse stmt: 62 1437085 {1602013::data=1} [] []
 next1: 1437096
-parse stmt: 1437096
+parse stmt: 63 1437096 {1602013::data=1} [] []
 next1: 1437106
-parse stmt: 1437106
-parse stmt: 1437115
-parse stmt: 1437125
-parse stmt: 1437133
-parse stmt: 1437141
+parse stmt: 64 1437106 {1602013::data=1} [] []
+parse stmt: 65 1437115 {1602013::data=1} [] []
+parse stmt: 66 1437125 {1602013::data=1} [] []
+parse stmt: 67 1437133 {1602013::data=1} [] []
+parse stmt: 68 1437141 {1602013::data=1} [] []
 next1: 1436969
-parse stmt: 1436969
-parse stmt: 1437205
-parse stmt: 1437149
-parse stmt: 44157
-parse stmt: 44207
-parse stmt: 44217
+parse stmt: 69 1436969 {1602013::data=1} [] []
+parse stmt: 70 1437205 {1602013::data=1} [] []
+parse stmt: 71 1437149 {1602013::data=1} [] []
+parse stmt: 72 1429098 {1602013::data=1} [] []
+parse stmt: 73 1428992 {1602013::data=1} [] []
+parse stmt: 74 1302115 {1602013::data=1} [] []
+parse stmt: 75 1353696 {1602013::data=1} [] []
+parse stmt: 76 1554667 {1602013::data=1} [] []
+parse stmt: 77 1437205 {1602013::data=1} [] []
+parse stmt: 78 1437149 {1602013::data=1} [] []
+parse stmt: 79 1128736 {1602013::data=1} [] []
+parse stmt: 80 1437205 {1602013::data=1} [] []
+parse stmt: 81 1437149 {1602013::data=1} [] []
+parse stmt: 82 1190687 {1602013::data=1} [] []
+next1: 1190694
+next1: 1190704
+parse stmt: 84 1190704 {1602013::data=1} [] []
+parse stmt: 85 1190717 {1602013::data=1} [] []
+parse stmt: 86 1190730 {1602013::data=1} [] []
+parse stmt: 87 1190743 {1602013::data=1} [] []
+parse stmt: 88 1190756 {1602013::data=1} [] []
+parse stmt: 90 1190784 {1602013::data=1} [] []
+next1: 1190651
+parse stmt: 91 1190651 {1602013::data=1} [] []
+parse stmt: 92 1437205 {1602013::data=1} [] []
+parse stmt: 93 1437149 {1602013::data=1} [] []
+parse stmt: 94 1196046 {1602013::data=1} [] []
+parse stmt: 95 1437205 {1602013::data=1} [] []
+parse stmt: 96 1437149 {1602013::data=1} [] []
+parse stmt: 97 1194624 {1602013::data=1} [] []
+next1: 1194576
+parse stmt: 98 1194576 {1602013::data=1} [] []
+parse stmt: 99 1437205 {1602013::data=1} [] []
+parse stmt: 100 1437149 {1602013::data=1} [] []
+parse stmt: 101 1595394 {1602013::data=1} [] []
+parse stmt: 102 1595313 {1602013::data=1} [] []
+parse stmt: 103 1458789 {1602013::data=1} [] []
+parse stmt: 104 1525298 {1602013::data=1} [] []
+parse stmt: 105 1524350 {1602013::data=1} [] []
+parse stmt: 106 1524685 {1602013::data=1} [] []
+parse stmt: 107 1527281 {1602013::data=1} [] []
+parse stmt: 108 1527297 {1602013::data=1} [] []
+parse stmt: 109 1527240 {1602013::data=1} [] []
+parse stmt: 110 1532887 {1602013::data=1} [] []
+parse stmt: 111 1532898 {1602013::data=1} [] []
+parse stmt: 113 1532815 {1602013::data=1} [] []
+parse stmt: 114 2128076 {1602013::data=1} [] []
+parse stmt: 115 2127899 {1602013::data=1} [] []
+parse stmt: 116 2127906 {1602013::data=1} [] []
+parse stmt: 117 1533189 {1602013::data=1} [] []
+parse stmt: 118 2128076 {1602013::data=1} [] []
+parse stmt: 119 2127899 {1602013::data=1} [] []
+parse stmt: 120 2127906 {1602013::data=1} [] []
+parse stmt: 121 1532945 {1602013::data=1} [] []
+parse stmt: 122 2128076 {1602013::data=1} [] []
+parse stmt: 123 2127899 {1602013::data=1} [] []
+parse stmt: 124 2127906 {1602013::data=1} [] []
+parse stmt: 125 1528576 {1602013::data=1} [] []
+parse stmt: 126 1528592 {1602013::data=1} [] []
+parse stmt: 127 1528535 {1602013::data=1} [] []
+parse stmt: 128 1528116 {1602013::data=1} [] []
+parse stmt: 129 2131866 {1602013::data=1} [] []
+parse stmt: 130 2131873 {1602013::data=1} [] []
+parse stmt: 131 2132103 {1602013::data=1} [] []
+parse stmt: 132 1528058 {1602013::data=1} [] []
+parse stmt: 133 1528069 {1602013::data=1} [] []
+parse stmt: 135 1527992 {1602013::data=1} [] []
+parse stmt: 136 2131866 {1602013::data=1} [] []
+parse stmt: 137 2131873 {1602013::data=1} [] []
+parse stmt: 138 2132103 {1602013::data=1} [] []
+parse stmt: 139 1531419 {1602013::data=1} [] []
+parse stmt: 140 1531435 {1602013::data=1} [] []
+parse stmt: 141 1531390 {1602013::data=1} [] []
+parse stmt: 142 1524405 {1602013::data=1} [] []
+parse stmt: 143 1529465 {1602013::data=1} [] []
+parse stmt: 144 1529481 {1602013::data=1} [] []
+parse stmt: 145 1529436 {1602013::data=1} [] []
+parse stmt: 146 1524405 {1602013::data=1} [] []
+parse stmt: 147 1525654 {1602013::data=1} [] []
+parse stmt: 148 1525670 {1602013::data=1} [] []
+parse stmt: 149 1525625 {1602013::data=1} [] []
+parse stmt: 150 1527131 {1602013::data=1} [] []
+parse stmt: 151 1527088 {1602013::data=1} [] []
+parse stmt: 152 1800769 {1602013::data=1} [] []
+next1: 1800776
+parse stmt: 153 1800776 {1602013::data=1} [] []
+parse stmt: 154 1800787 {1602013::data=1} [] []
+parse stmt: 155 1800809 {1602013::data=1} [] []
+parse stmt: 157 1800823 {1602013::data=1} [] []
+next1: 1800836
+parse stmt: 158 1800836 {1602013::data=1} [] []
+parse stmt: 159 1800787 {1602013::data=1} [] []
+parse stmt: 160 1800809 {1602013::data=1} [] []
+parse stmt: 162 1800823 {1602013::data=1} [] []
+next1: 1800836
+parse stmt: 163 1800836 {1602013::data=1} [] []
+parse stmt: 164 1800776 {1602013::data=1} [] []
+parse stmt: 165 1800787 {1602013::data=1} [] []
+parse stmt: 166 1800809 {1602013::data=1} [] []
+parse stmt: 168 1800823 {1602013::data=1} [] []
+next1: 1800836
+parse stmt: 169 1800836 {1602013::data=1} [] []
+parse stmt: 170 1526660 {1602013::data=1} [] []
+parse stmt: 171 1526676 {1602013::data=1} [] []
+parse stmt: 172 1526631 {1602013::data=1} [] []
+parse stmt: 173 1527203 {1602013::data=1} [] []
+parse stmt: 174 1527088 {1602013::data=1} [] []
+parse stmt: 175 1527060 {1602013::data=1} [] []
+parse stmt: 176 1527076 {1602013::data=1} [] []
+parse stmt: 177 1527024 {1602013::data=1} [] []
+parse stmt: 178 1524405 {1602013::data=1} [] []
+parse stmt: 179 1526115 {1602013::data=1} [] []
+parse stmt: 180 1526131 {1602013::data=1} [] []
+parse stmt: 181 1526086 {1602013::data=1} [] []
+parse stmt: 182 1527167 {1602013::data=1} [] []
+parse stmt: 183 1527088 {1602013::data=1} [] []
+parse stmt: 184 1532787 {1602013::data=1} [] []
+parse stmt: 185 1532803 {1602013::data=1} [] []
+parse stmt: 186 1532758 {1602013::data=1} [] []
+parse stmt: 187 1524405 {1602013::data=1} [] []
+parse stmt: 188 1436623 {1602013::data=1} [] []
+parse stmt: 189 1436640 {1602013::data=1} [] []
+parse stmt: 190 198487 {1602013::data=1} [] []
+parse stmt: 191 105159 {1602013::data=1} [] []
+parse stmt: 193 105106 {1602013::data=1} [] []
+parse stmt: 194 103448 {1602013::data=1} [] []
+parse stmt: 195 103457 {1602013::data=1} [] []
+parse stmt: 196 103466 {1602013::data=1} [] []
+parse stmt: 197 103480 {1602013::data=1} [] []
+parse stmt: 199 103495 {1602013::data=1} [] []
+parse stmt: 200 103505 {1602013::data=1} [] []
+parse stmt: 201 103519 {1602013::data=1} [] []
+parse stmt: 203 103534 {1602013::data=1} [] []
+parse stmt: 204 103544 {1602013::data=1} [] []
+parse stmt: 205 103559 {1602013::data=1} [] []
+parse stmt: 207 103577 {1602013::data=1} [] []
+parse stmt: 210 103598 {1602013::data=1} [] []
+parse stmt: 211 103665 {1602013::data=1} [] []
+parse stmt: 213 103688 {1602013::data=1} [] []
+parse stmt: 214 103695 {1602013::data=1} [] []
+parse stmt: 215 103704 {1602013::data=1} [] []
+parse stmt: 216 103712 {1602013::data=1} [] []
+parse stmt: 217 103735 {1602013::data=1} [] []
+parse stmt: 218 103743 {1602013::data=1} [] []
+parse stmt: 219 103770 {1602013::data=1} [] []
+parse stmt: 220 103778 {1602013::data=1} [] []
+next1: 103871
+parse stmt: 221 103871 {1602013::data=1} [] []
+parse stmt: 222 103879 {1602013::data=1} [] []
+parse stmt: 224 103976 {1602013::data=1} [] []
+parse stmt: 226 104001 {1602013::data=1} [] []
+next1: 104010
+parse stmt: 227 104010 {1602013::data=1} [] []

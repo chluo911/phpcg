@@ -305,7 +305,7 @@ public class StaticAnalysis  {
 	//@output: get taint status of this statement, add it to taint tree is it is tainted, and find the next statement ID 
 	private boolean traverse(Node node, boolean start, HashSet<Long> back) {
 		
-		System.out.println("parse stmt: "+node.astId);
+		System.out.println("parse stmt: "+node.nodeId+" "+node.astId+" "+node.inter+" "+node.intro+" "+node.caller);
 		Long stmt = node.astId;
 		if(stmt==null) {
 			System.err.println("Fail to get statement location: "+stmt);
@@ -387,7 +387,18 @@ public class StaticAnalysis  {
 					Stack<Long> stack =(Stack<Long>) node.caller.clone();
 					//we do not backwardly analyze, unless it is an exit node 
 					if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-						continue;
+						if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+							Long tmp = CSVCFGExporter.cfgSave.get(next).get(1);
+							if(tmp>stmt) {
+								next=tmp;
+							}
+							else {
+								break;
+							}
+						}
+						else {
+							break;
+						}
 					}
 					nextNode=new Node(++ID, next, newInter, intro, stack);
 					Long caller=(long) 0;
@@ -421,7 +432,18 @@ public class StaticAnalysis  {
 						Stack<Long> stack =(Stack<Long>) node.caller.clone();
 						//we do not backwardly analyze, unless it is an exit node 
 						if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-							continue;
+							if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+								Long tmp = CSVCFGExporter.cfgSave.get(next).get(1);
+								if(tmp>stmt) {
+									next=tmp;
+								}
+								else {
+									break;
+								}
+							}
+							else {
+								break;
+							}
 						}
 						Node nextNode = new Node(++ID, next, newNode.inter, intro, stack);
 						Long caller=(long) 0;
@@ -472,7 +494,19 @@ public class StaticAnalysis  {
 								Stack<Long> stack =(Stack<Long>) node.caller.clone();
 								//we do not backwardly analyze, unless it is an exit node 
 								if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-									continue;
+									if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+										Long tmp = CSVCFGExporter.cfgSave.get(next).get(1);
+										if(tmp>stmt) {
+											next=tmp;
+										}
+										else {
+											break;
+										}
+									}
+									//we donot analyze the node we have analyzed
+									else {
+										break;
+									}
 								}
 								Node nextNode = new Node(++ID, next, node.inter, intro, stack);
 								Long call=(long) 0;
@@ -487,7 +521,6 @@ public class StaticAnalysis  {
 								else {
 									stmt=next;
 								}
-								break;
 							}
 							return false;
 						}
@@ -521,6 +554,9 @@ public class StaticAnalysis  {
 								for(Long taint: related.keySet()) {
 									//the ith argument is tainted
 									if(taint.equals(arg.getNodeId())) {
+										if(funcNode.getParameterList().size()<=i) {
+											continue;
+										}
 										//the ith parameter will also be tainted
 										ParameterBase param = funcNode.getParameterList().getParameter(i);
 										intro.add(param.getNodeId());
@@ -555,7 +591,18 @@ public class StaticAnalysis  {
 										Stack<Long> stack =(Stack<Long>) node.caller.clone();
 										//we do not backwardly analyze, unless it is an exit node 
 										if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-											break;
+											if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+												Long tmp = CSVCFGExporter.cfgSave.get(next).get(1);
+												if(tmp>stmt) {
+													next=tmp;
+												}
+												else {
+													break;
+												}
+											}
+											else {
+												break;
+											}
 										}
 										Node nextNode = new Node(++ID, next, node.inter, save, stack);
 										Long call=(long) 0;
@@ -627,7 +674,18 @@ public class StaticAnalysis  {
 									Stack<Long> stack =(Stack<Long>) node.caller.clone();
 									//we do not backwardly analyze, unless it is an exit node 
 									if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-										continue;
+										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+											Long tmp = CSVCFGExporter.cfgSave.get(next).get(1);
+											if(tmp>stmt) {
+												next=tmp;
+											}
+											else {
+												break;
+											}
+										}
+										else {
+											break;
+										}
 									}
 									Node nextNode = new Node(++ID, next, newInter, intro, stack);
 									Long call=(long) 0;
@@ -667,7 +725,18 @@ public class StaticAnalysis  {
 									Stack<Long> stack =(Stack<Long>) node.caller.clone();
 									//we do not backwardly analyze, unless it is an exit node 
 									if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-										continue;
+										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+											Long tmp1 = CSVCFGExporter.cfgSave.get(next).get(1);
+											if(tmp1>stmt) {
+												next=tmp1;
+											}
+											else {
+												break;
+											}
+										}
+										else {
+											break;
+										}
 									}
 									Node nextNode = new Node(++ID, next, tmp.inter, save, stack);
 									Long call=(long) 0;
@@ -717,6 +786,9 @@ public class StaticAnalysis  {
 								for(Long taint: related.keySet()) {
 									//the ith argument is tainted
 									if(taint.equals(arg.getNodeId())) {
+										if(funcNode.getParameterList().size()<=i) {
+											continue;
+										}
 										//the ith parameter will also be tainted
 										ParameterBase param = funcNode.getParameterList().getParameter(i);
 										intro.add(param.getNodeId());
@@ -750,7 +822,20 @@ public class StaticAnalysis  {
 										Stack<Long> stack =(Stack<Long>) node.caller.clone();
 										//we do not backwardly analyze, unless it is an exit node 
 										if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-											continue;
+											//foreach stmt
+											if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+												Long tmp = CSVCFGExporter.cfgSave.get(next).get(1);
+												if(tmp>stmt) {
+													next=tmp;
+												}
+												else {
+													break;
+												}
+											}
+											else {
+												break;
+											}
+											
 										}
 										Node nextNode = new Node(++ID, next, node.inter, save, stack);
 										Long call=(long) 0;
@@ -765,7 +850,6 @@ public class StaticAnalysis  {
 										else {
 											stmt=next;
 										}
-										break;
 									}
 									return false;
 								}
@@ -795,7 +879,18 @@ public class StaticAnalysis  {
 								Stack<Long> stack =(Stack<Long>) node.caller.clone();
 								//we do not backwardly analyze, unless it is an exit node 
 								if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-									continue;
+									if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+										Long tmp = CSVCFGExporter.cfgSave.get(next).get(1);
+										if(tmp>stmt) {
+											next=tmp;
+										}
+										else {
+											break;
+										}
+									}
+									else {
+										break;
+									}
 								}
 								Node nextNode = new Node(++ID, next, node.inter, save, stack);
 								Long call=(long) 0;
@@ -810,7 +905,6 @@ public class StaticAnalysis  {
 								else {
 									stmt=next;
 								}
-								break;
 							}
 							return false;
 						}
@@ -888,7 +982,18 @@ public class StaticAnalysis  {
 								Stack<Long> stack =(Stack<Long>) node.caller.clone();
 								//we do not backwardly analyze, unless it is an exit node 
 								if(next<=stmtId && CSVCFGExporter.cfgSave.containsKey(next)) {
-									continue;
+									if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+										Long tmp = CSVCFGExporter.cfgSave.get(next).get(1);
+										if(tmp>stmt) {
+											next=tmp;
+										}
+										else {
+											break;
+										}
+									}
+									else {
+										break;
+									}
 								}
 								//update context
 								Node nextNode = new Node(++ID, next, newInter, intro, stack);
@@ -929,7 +1034,18 @@ public class StaticAnalysis  {
 								Stack<Long> stack =(Stack<Long>) node.caller.clone();
 								//we do not backwardly analyze, unless it is an exit node 
 								if(next<=stmtId && CSVCFGExporter.cfgSave.containsKey(next)) {
-									continue;
+									if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+										Long tmp1 = CSVCFGExporter.cfgSave.get(next).get(1);
+										if(tmp1>stmt) {
+											next=tmp1;
+										}
+										else {
+											break;
+										}
+									}
+									else {
+										break;
+									}
 								}
 								//
 								Node nextNode = new Node(++ID, next, tmp.inter, save, stack);
@@ -1446,6 +1562,7 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
 
 

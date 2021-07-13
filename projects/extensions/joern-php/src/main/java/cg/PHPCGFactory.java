@@ -23,6 +23,7 @@ import ast.expressions.PropertyExpression;
 import ast.expressions.StaticPropertyExpression;
 import ast.expressions.StringExpression;
 import ast.expressions.Variable;
+import ast.functionDef.FunctionDefBase;
 import ast.functionDef.ParameterList;
 import ast.php.declarations.ClassDef;
 import ast.php.expressions.ArrayElement;
@@ -127,6 +128,7 @@ public class PHPCGFactory {
 	//public static Set<String> indirect = new HashSet<String>();
 	public static HashSet<Long> sinks = new HashSet<Long>();
 	public static List<Long> objCaller = new ArrayList<Long>();
+	public static MultiHashMap<Long, Long> file2file = new MultiHashMap<Long, Long>();
 	
 	//public static Set<FunctionDef> constructSet = new HashSet<FunctionDef>();
 	/**
@@ -154,7 +156,7 @@ public class PHPCGFactory {
 		createNonStaticMethodCallEdges(cg);
 		System.err.println("@@@@@");
 
-		reset();
+		reset(cg);
 		
 		return cg;
 	}
@@ -175,6 +177,7 @@ public class PHPCGFactory {
 			Long topid = toTopLevelFile.getTopLevelId(nodeid);
 			allUse.add(topid, PHPCSVEdgeInterpreter.collectUse.get(nodeid));
 		}
+	
 	}
 	
 	
@@ -301,7 +304,8 @@ public class PHPCGFactory {
 		int x1 = functionCalls.size();
 		
 		AtomicInteger c1= new AtomicInteger(0);
-		functionCalls.parallelStream().forEach(functionCall -> {
+		for(CallExpressionBase functionCall : functionCalls) {
+		//functionCalls.parallelStream().forEach(functionCall -> {
 			//System.err.println(x1+" "+c1+" "+functionCall.getNodeId());
 			c1.incrementAndGet();
 			System.err.println("function: "+c1+" "+x1);
@@ -323,14 +327,14 @@ public class PHPCGFactory {
 				
 				//we ignore test files
 				if(filterTest(callIdentifier.getNameChild().getEscapedCodeStr())) {
-					return;
+					continue;
 				}
 				
 				//callback in built-in functions
 				if(callIdentifier.getNameChild().getEscapedCodeStr().equals("usort") ||
 							callIdentifier.getNameChild().getEscapedCodeStr().equals("array_walk")) {
 					if(functionCall.getArgumentList().size()<2) {
-						return;
+						continue;
 					}
 					ASTNode secondArg = functionCall.getArgumentList().getArgument(1);
 					//calling method
@@ -393,7 +397,7 @@ public class PHPCGFactory {
 					call_user.add(functionCall.getNodeId());
 					
 					if(functionCall.getArgumentList().size()==0) {
-						return;
+						continue;
 					}
 					
 					ASTNode firstArg = functionCall.getArgumentList().getArgument(0);
@@ -531,7 +535,7 @@ public class PHPCGFactory {
 				parsevar.reset();
 			}
 			//System.err.println("Statically unknown function call at node id " + functionCall.getNodeId() + "!");
-		});
+		};
 	}
 	
 	private static boolean filterTest(String escapedCodeStr) {
@@ -546,8 +550,8 @@ public class PHPCGFactory {
 		int x3=constructorCalls.size();
 		AtomicInteger c3 = new AtomicInteger(0);
 		
-		//for( NewExpression constructorCall : constructorCalls) {
-		constructorCalls.parallelStream().forEach(constructorCall -> {
+		for( NewExpression constructorCall : constructorCalls) {
+		//constructorCalls.parallelStream().forEach(constructorCall -> {
 			c3.incrementAndGet();
 			System.err.println(x3+" "+c3+" "+constructorCall.getNodeId());
 			// make sure the call target is statically known
@@ -561,7 +565,7 @@ public class PHPCGFactory {
 				if(filterTest(constructorKey) ||
 						filterTest(constructorCall.getEnclosingClass()) ||
 						filterTest(getDir(constructorCall.getNodeId()))) {
-					return;
+					continue;
 				}
 				
 				// if class identifier is fully qualified,
@@ -606,14 +610,20 @@ public class PHPCGFactory {
 				}
 				//addCallEdgeIfDefinitionKnown(cg, destructorDefs, constructorCall, constructorKey, false);
 			}
-		});
+		};
 	}
 	
 	private static void getStaticCall(Identifier classIdentifier, String methodname, CG cg, StaticCallExpression staticCall) {
 		if( classIdentifier.getFlags().contains( PHPCSVNodeTypes.FLAG_NAME_FQ)) {
 			Long classId = getClassId(classIdentifier.getNameChild().getEscapedCodeStr(), staticCall.getNodeId(), "");
 			String staticMethodKey = classId + "::" + methodname;
-			addCallEdgeIfDefinitionKnown(cg, staticMethodDefs, staticCall, staticMethodKey, false);
+			if(methodname.equals("__construct")) {
+				staticMethodKey=classId.toString();
+				addCallEdgeIfDefinitionKnown(cg, constructorDefs, staticCall, staticMethodKey, false);
+			}
+			else {
+				addCallEdgeIfDefinitionKnown(cg, staticMethodDefs, staticCall, staticMethodKey, false);
+			}
 		}
 		//parent::method
 		else if(classIdentifier.getNameChild().getEscapedCodeStr().equals("parent")) {
@@ -625,7 +635,13 @@ public class PHPCGFactory {
 		    	List<Long> prtIds = ch2prt.get(ClassDefId);
 		    	for(Long prtId: prtIds) {
 		    		String staticMethodKey = prtId+"::"+methodname;
-			    	addCallEdgeIfDefinitionKnown(cg, staticMethodDefs, staticCall, staticMethodKey, false);
+		    		if(methodname.equals("__construct")) {
+						staticMethodKey=prtId.toString();
+						addCallEdgeIfDefinitionKnown(cg, constructorDefs, staticCall, staticMethodKey, false);
+					}
+					else {
+						addCallEdgeIfDefinitionKnown(cg, staticMethodDefs, staticCall, staticMethodKey, false);
+					}
 		    	}
 		    }
 		}
@@ -638,7 +654,13 @@ public class PHPCGFactory {
 			clds.add(prtId);
 			for(Long cld: clds) {
 				String staticMethodKey = cld+"::"+methodname;
-				addCallEdgeIfDefinitionKnown(cg, staticMethodDefs, staticCall, staticMethodKey, false);
+				if(methodname.equals("__construct")) {
+					staticMethodKey=cld.toString();
+					addCallEdgeIfDefinitionKnown(cg, constructorDefs, staticCall, staticMethodKey, false);
+				}
+				else {
+					addCallEdgeIfDefinitionKnown(cg, staticMethodDefs, staticCall, staticMethodKey, false);
+				}
 			}
 		}
 		//self::method and className::method
@@ -654,15 +676,21 @@ public class PHPCGFactory {
 					return;
 				}
 				String staticMethodKey = ClassDefId+"::"+methodname;
-				addCallEdgeIfDefinitionKnown(cg, staticMethodDefs, staticCall, staticMethodKey, false);
+				if(methodname.equals("__construct")) {
+					staticMethodKey=ClassDefId.toString();
+					addCallEdgeIfDefinitionKnown(cg, constructorDefs, staticCall, staticMethodKey, false);
+				}
+				else {
+					addCallEdgeIfDefinitionKnown(cg, staticMethodDefs, staticCall, staticMethodKey, false);
+				}
 		}
 	}
 	
 	private static void createStaticMethodCallEdges(CG cg) {
 		int x2 = staticMethodCalls.size();
 		AtomicInteger c2 = new AtomicInteger(0);
-		//for( StaticCallExpression staticCall : staticMethodCalls) {
-		staticMethodCalls.parallelStream().forEach(staticCall -> {
+		for( StaticCallExpression staticCall : staticMethodCalls) {
+		//staticMethodCalls.parallelStream().forEach(staticCall -> {
 			c2.incrementAndGet();
 			System.err.println(x2+" "+c2+" "+staticCall.getNodeId());
 			
@@ -676,7 +704,7 @@ public class PHPCGFactory {
 				if(filterTest(classIdentifier.getNameChild().getEscapedCodeStr()) ||
 						filterTest(staticCall.getEnclosingClass()) ||
 						filterTest(getDir(staticCall.getNodeId()))){
-					return;
+					continue;
 				}
 				
 				getStaticCall(classIdentifier, methodName.getEscapedCodeStr(), cg, staticCall);
@@ -721,7 +749,7 @@ public class PHPCGFactory {
 					}
 				}
 			}
-		});
+		};
 	}
 	
 	//given the method name, we get the target method
@@ -776,13 +804,14 @@ public class PHPCGFactory {
 	private static void createNonStaticMethodCallEdges(CG cg) {
 		int x4=nonStaticMethodCalls.size();
 		AtomicInteger c4 = new AtomicInteger(0);
-		nonStaticMethodCalls.parallelStream().forEach(methodCall -> {
+		for(MethodCallExpression methodCall: nonStaticMethodCalls) {
+		//nonStaticMethodCalls.parallelStream().forEach(methodCall -> {
 			c4.getAndIncrement();
 			System.err.println(x4+" "+c4+" "+methodCall.getNodeId());
 			
 			if(filterTest(methodCall.getEnclosingClass()) ||
 					filterTest(getDir(methodCall.getNodeId()))) {
-				return;
+				continue;
 			}
 			
 			//method name is a string
@@ -825,7 +854,7 @@ public class PHPCGFactory {
 						            lock.unlock();
 						        }
 							}
-							return;
+							continue;
 						}
 						
 						//$this->method()
@@ -905,7 +934,7 @@ public class PHPCGFactory {
 				//System.err.println("Statically unknown non-static method call at node id " + methodCall.getNodeId());
 			}
 			
-		});
+		};
 		
 		Collections.sort(objCaller);
 		Collections.reverse(objCaller);
@@ -977,7 +1006,7 @@ public class PHPCGFactory {
 		//We cannot get the full name of function call
 		int idx = 0;
 		if(functionKey.contains("-1::") || functionKey.contains("*")) {
-			suspicious.add(functionCall.getNodeId());
+			//suspicious.add(functionCall.getNodeId());
 			if(functionKey.contains("*")) {
 				idx = functionKey.indexOf("*");
 			}
@@ -1160,11 +1189,9 @@ public class PHPCGFactory {
 			}
 			if(!(call2mtd.containsKey(functionCall.getNodeId()) && call2mtd.get(functionCall.getNodeId()).contains(functionDef.getNodeId()))) {
 				call2mtd.add(functionCall.getNodeId(), functionDef.getNodeId());
-				mtd2call.add(functionDef.getNodeId(), functionCall.getNodeId());
-				mtd2mtd.add(functionCall.getFuncId(), functionDef.getNodeId());
-				cg.addVertex(caller);
-				cg.addVertex(callee);
-				cg.addEdge(new CGEdge(caller, callee));
+				//mtd2call.add(functionDef.getNodeId(), functionCall.getNodeId());
+				//mtd2mtd.add(functionCall.getFuncId(), functionDef.getNodeId());
+				file2file.add(toTopLevelFile.getTopLevelId(functionCall.getNodeId()), toTopLevelFile.getTopLevelId(functionDef.getNodeId()));
 			}
         } finally {
             lock.unlock();
@@ -1173,8 +1200,58 @@ public class PHPCGFactory {
 		return true;
 	}
 	
-	private static void reset() {
+	private static void reset(CG cg) {
 	
+		MultiHashMap<Long, Long> save = new MultiHashMap<Long, Long>();
+		int i1=-1, i2=-1;
+		for(Long caller: call2mtd.keySet()) {
+			i1=Math.max(i1, call2mtd.get(caller).size());
+			ASTNode callerNode = ASTUnderConstruction.idToNode.get(caller);
+			Long callerFileId = toTopLevelFile.getTopLevelId(callerNode.getNodeId());
+			String callerFile = ASTUnderConstruction.idToNode.get(callerFileId).getEscapedCodeStr();
+			List<Long> callees = call2mtd.get(caller);
+			if(callees.size()<2) {
+				save.addAll(caller, callees);
+				continue;
+			}
+			System.err.println("caller: "+caller);
+			MultiHashMap<Integer, Long> tmp = new MultiHashMap<Integer, Long>();
+			for(Long callee: callees) {
+				ASTNode calleeNode = ASTUnderConstruction.idToNode.get(callee);
+				Long calleeFileId = toTopLevelFile.getTopLevelId(calleeNode.getNodeId());
+				String calleeFile = ASTUnderConstruction.idToNode.get(calleeFileId).getEscapedCodeStr();
+				int com = getCommon(callerFile, calleeFile);
+				tmp.add(com, callee);
+			}
+			Set<Integer> keys =tmp.keySet();
+			List<Integer> lKeys = new ArrayList<Integer>(keys);
+			Collections.reverse(lKeys);
+			for(int i=0; i<lKeys.size()&&i<5; i++) {
+				Integer close = lKeys.get(i);
+				List<Long> target = tmp.get(close);
+				System.err.println("Close: "+close+" "+caller+target);
+				save.addAll(caller, target);
+			}
+		}
+		
+		call2mtd=save;
+		
+		for(Long caller: call2mtd.keySet()) {
+			i2=Math.max(i2, call2mtd.get(caller).size());
+			Long callFunc = ASTUnderConstruction.idToNode.get(caller).getFuncId();
+			for(Long mtd: call2mtd.get(caller)) {
+				CGNode callerNode = new CGNode((CallExpressionBase) ASTUnderConstruction.idToNode.get(caller));
+				CGNode calleeNode = new CGNode((FunctionDefBase) ASTUnderConstruction.idToNode.get(mtd));
+				mtd2call.add(mtd, caller);
+				mtd2mtd.add(callFunc, mtd);
+				cg.addVertex(callerNode);
+				cg.addVertex(calleeNode);
+				cg.addEdge(new CGEdge(callerNode, calleeNode));
+			}
+		}
+		
+		System.out.println("Maximum: "+i1+" "+i2);
+		
 		functionDefs.clear();
 		functionCalls.clear();
 		
@@ -1190,6 +1267,17 @@ public class PHPCGFactory {
 
 	}
 	
+	private static int getCommon(String callerFile, String calleeFile) {
+		int ret=0;
+		int min=Math.min(callerFile.length(), calleeFile.length());
+		for(ret=0; ret<min; ret++) {
+			if(callerFile.charAt(ret)!=calleeFile.charAt(ret)) {
+				break;
+			}
+		}
+		return ret;
+	}
+
 	/**
 	 * Adds a new known function definition.
 	 * 
@@ -1306,10 +1394,25 @@ public class PHPCGFactory {
 			return staticMethodCalls.add( (StaticCallExpression)callExpression);
 		else if( callExpression instanceof NewExpression)
 			return constructorCalls.add( (NewExpression)callExpression);
-		else if( callExpression instanceof MethodCallExpression)
-			return nonStaticMethodCalls.add( (MethodCallExpression)callExpression);
+		else if( callExpression instanceof MethodCallExpression) {
+			if(nonStaticMethodCalls.isEmpty()) {
+				nonStaticMethodCalls.add((MethodCallExpression)callExpression);
+				return true;
+			}
+			MethodCallExpression save = nonStaticMethodCalls.getLast();
+			Long lastId = nonStaticMethodCalls.getLast().getNodeId();
+			if(lastId+1==callExpression.getNodeId()) {
+				nonStaticMethodCalls.removeLast();
+				nonStaticMethodCalls.add((MethodCallExpression) callExpression);
+				nonStaticMethodCalls.add(save);
+			}
+			else {
+				nonStaticMethodCalls.add((MethodCallExpression)callExpression);
+			}
+			return true;
+		}
 		else
-			return functionCalls.add( callExpression);
+			return functionCalls.add(callExpression);
 	}
 	
 	//we do not analyze the alias;
@@ -1410,6 +1513,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 
