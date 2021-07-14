@@ -266,7 +266,7 @@ public class StaticAnalysis  {
 	}
 
 	private void constructTaintTree(Node node) {
-		traverse(node, true, new HashSet<Long>());
+		traverse(node, true, new LinkedList<Long>());
 		getVulnerablePath();
 	}
 
@@ -303,9 +303,9 @@ public class StaticAnalysis  {
 	//traverse the node's statement
 	//@param: one taint node, a boolean value indicating if the current statement is initial source
 	//@output: get taint status of this statement, add it to taint tree is it is tainted, and find the next statement ID 
-	private boolean traverse(Node node, boolean start, HashSet<Long> back) {
+	private boolean traverse(Node node, boolean start, LinkedList<Long> back) {
 		
-		System.out.println("parse stmt: "+node.nodeId+" "+node.astId+" "+node.inter+" "+node.intro+" "+node.caller);
+		System.out.println("parse stmt: "+node.nodeId+" "+node.astId+" "+node.inter+" "+node.intro+" "+node.caller+" "+back);
 		Long stmt = node.astId;
 		if(stmt==null) {
 			System.err.println("Fail to get statement location: "+stmt);
@@ -544,7 +544,7 @@ public class StaticAnalysis  {
 							
 							FunctionDef funcNode = (FunctionDef) ASTUnderConstruction.idToNode.get(func);
 							//if it is an empty function, we skip this function
-							if(funcNode.getContent().size()==0) {
+							if(funcNode.getContent()==null || funcNode.getContent().size()==0) {
 								continue;
 							}
 							//check weather params are tainted
@@ -774,6 +774,7 @@ public class StaticAnalysis  {
 							FunctionDef funcNode = (FunctionDef) ASTUnderConstruction.idToNode.get(func);
 							if(funcNode.getContent()==null) {
 								System.err.println("Empty function: "+func);
+								continue;
 							}
 							//if it is an empty function, we skip it
 							if(funcNode.getContent().size()==0) {
@@ -1098,30 +1099,20 @@ public class StaticAnalysis  {
 				}
 				//get the possible caller
 				Set<Long> callers  = new HashSet<Long>(PHPCGFactory.mtd2call.get(funcID));
-				for(String iden: node.inter.keySet()) {
-					//the source of iden
-					Long prev = node.inter.get(iden);
-					if(ID2Node.containsKey(prev)) {
-						//the source stmt;
-						//get the next related statement
-						for(Long call: callers) {
-							Set<Long> intro = new HashSet<Long>();
-							Long stmtID = getStatement(call);
-							if(!node.intro.isEmpty()) {
-								intro.add(stmtID);
-							}
-							if(CSVCFGExporter.cfgSave.containsKey(stmtID)) {
-								List<Long> nextStmts = CSVCFGExporter.cfgSave.get(stmtID);
-								for(Long next: nextStmts) {
-									Node nextNode = new Node(++ID, next, node.inter, intro, node.caller);
-									Long caller=(long) 0;
-									if(!node.caller.isEmpty()) {
-										caller=node.caller.peek();
-									}
-									traverse(nextNode, false, back);
-									break;
-								}
-							}
+				for(Long call: callers) {
+					Set<Long> intro = new HashSet<Long>();
+					Long stmtID = getStatement(call);
+					if(!node.intro.isEmpty()) {
+						intro.add(stmtID);
+					}
+					if(CSVCFGExporter.cfgSave.containsKey(stmtID)) {
+						List<Long> nextStmts = CSVCFGExporter.cfgSave.get(stmtID);
+						for(Long next: nextStmts) {
+							Node nextNode = new Node(++ID, next, node.inter, intro, node.caller);
+							LinkedList<Long> backup = new LinkedList<Long>(back);
+							System.out.println("Back: "+funcID+" "+next);
+							traverse(nextNode, false, backup);
+							break;
 						}
 					}
 				}
@@ -1562,6 +1553,7 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
 
 
