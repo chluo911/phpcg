@@ -305,7 +305,8 @@ public class StaticAnalysis  {
 	//@output: get taint status of this statement, add it to taint tree is it is tainted, and find the next statement ID 
 	private boolean traverse(Node node, boolean start, LinkedList<Long> back) {
 		
-		System.out.println("parse stmt: "+node.nodeId+" "+node.astId+" "+node.inter+" "+node.intro+" "+node.caller+" "+back);
+		System.out.println("parse stmt: "+node.astId+" "+node.inter+" "+node.intro+" "+node.caller+" "+back);
+		//System.out.println("parse stmt: "+node.nodeId+" "+node.astId);
 		Long stmt = node.astId;
 		if(stmt==null) {
 			System.err.println("Fail to get statement location: "+stmt);
@@ -753,6 +754,7 @@ public class StaticAnalysis  {
 									}
 								}
 							}
+							return false;
 						}
 						//it is user-defined function
 						for(Long func: targetFuncs) {
@@ -1082,6 +1084,10 @@ public class StaticAnalysis  {
 		}
 		//we do not end here, instead we iterate the next statement related to inter variable
 		else if(node.caller==null || node.caller.isEmpty()) {
+			//we do not iterate very deep
+			if(back.size()>10) {
+				return false;
+			}
 			//find next related statements
 			if(!node.inter.isEmpty() || !node.intro.isEmpty()) {
 				//the irs caller statements
@@ -1099,6 +1105,7 @@ public class StaticAnalysis  {
 				}
 				//get the possible caller
 				Set<Long> callers  = new HashSet<Long>(PHPCGFactory.mtd2call.get(funcID));
+				
 				for(Long call: callers) {
 					Set<Long> intro = new HashSet<Long>();
 					Long stmtID = getStatement(call);
@@ -1107,6 +1114,9 @@ public class StaticAnalysis  {
 					}
 					if(CSVCFGExporter.cfgSave.containsKey(stmtID)) {
 						List<Long> nextStmts = CSVCFGExporter.cfgSave.get(stmtID);
+						if(funcID==1194574) {
+							System.out.println("1194574: "+stmtID+" "+nextStmts);
+						}
 						for(Long next: nextStmts) {
 							Node nextNode = new Node(++ID, next, node.inter, intro, node.caller);
 							LinkedList<Long> backup = new LinkedList<Long>(back);

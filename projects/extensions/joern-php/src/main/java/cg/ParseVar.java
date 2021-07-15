@@ -1201,7 +1201,6 @@ public class ParseVar {
 								else {
 
 									System.err.println("Unsupport property name type: "+classId);
-
 								}
 
 								//get property class

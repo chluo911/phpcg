@@ -54,6 +54,7 @@ public class PHPCGFactory {
 	
 	// maintains a map of known constructors (e.g., "B\A" -> static function __construct() in class A in namespace B)
 	public static MultiHashMap<String,Method> constructorDefs = new MultiHashMap<String,Method>();
+	public static MultiHashMap<String,Method> constructorNameDefs = new MultiHashMap<String,Method>();
 	//maintains a map of known destructors
 	public static MultiHashMap<String, Method> destructorDefs = new MultiHashMap<String,Method>();
 	// maintains a list of static method calls
@@ -108,7 +109,6 @@ public class PHPCGFactory {
 	public static MultiHashMap<String, String> filepaths = new MultiHashMap<String, String>();
 	public static HashMap<Long, String> id2Name = new HashMap<Long, String>();
 	
-	public static Set<String> spiderAndScanner = new HashSet<String>();
 	//public static Map<Long, Long> howmany = new TreeMap<Long, Long>();
 	public static MultiHashMap<Long, String> allUse = new MultiHashMap<Long, String>();
 	
@@ -599,14 +599,15 @@ public class PHPCGFactory {
 				}
 			}
 			else {
-				//System.err.println("!!!"+constructorCall);
-				//String constructorKey = "-1";
 				ParseVar parsevar = new ParseVar();
-				parsevar.init(constructorCall.getTargetClass().getNodeId(), true, "");
+				parsevar.init(constructorCall.getTargetClass().getNodeId(), false, "");
 				parsevar.handle();
 				Set<String> classValue = parsevar.getVar();
+				if(1191711==constructorCall.getNodeId()) {
+					System.out.println(1191711+" "+classValue);
+				}
 				for(String constructorKey: classValue) {
-					addCallEdgeIfDefinitionKnown(cg, constructorDefs, constructorCall, constructorKey, false);
+					addCallEdgeIfDefinitionKnown(cg, constructorNameDefs, constructorCall, constructorKey, false);
 				}
 				//addCallEdgeIfDefinitionKnown(cg, destructorDefs, constructorCall, constructorKey, false);
 			}
@@ -1016,10 +1017,7 @@ public class PHPCGFactory {
 				//suspicious.add(functionCall.getNodeId());
 				return true;
 			}
-			//it contains *
-			if(idx!=0) {
-				functionKey = functionKey.substring(0, idx);
-			}
+			
 			functionKey = functionKey.replace("-1::", "::");
 			String functionName = functionKey;
 			
@@ -1338,6 +1336,7 @@ public class PHPCGFactory {
 				String constructorKey = classId.toString();
 				constructorDefs.add( constructorKey, (Method)functionDef);
 			}
+			constructorNameDefs.add(((Method)functionDef).getEnclosingClass(), (Method)functionDef);
 			
 			return null;
 		}
@@ -1352,9 +1351,7 @@ public class PHPCGFactory {
 			Long classId = getClsId(((Method)functionDef).getEnclosingClass(), functionDef.getEnclosingNamespace());
 			if(classId!=-1) {
 				String methodKey = classId+"::"+functionDef.getName();
-				if(functionDef.getName().equals("processCategory")) {
-					System.err.println("processCategory "+methodKey);
-				}
+				
 				nonStaticMethodNameDefs.add(((Method)functionDef).getName(), (Method)functionDef);
 				nonStaticMethodDefs.add( methodKey, (Method)functionDef);
 			}
