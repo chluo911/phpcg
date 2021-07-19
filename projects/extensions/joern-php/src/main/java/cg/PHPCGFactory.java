@@ -129,6 +129,7 @@ public class PHPCGFactory {
 	public static HashSet<Long> sinks = new HashSet<Long>();
 	public static List<Long> objCaller = new ArrayList<Long>();
 	public static MultiHashMap<Long, Long> file2file = new MultiHashMap<Long, Long>();
+	public static MultiHashMap<Long, Long> callee2caller = new MultiHashMap<Long, Long>();
 	
 	//public static Set<FunctionDef> constructSet = new HashSet<FunctionDef>();
 	/**
@@ -166,10 +167,12 @@ public class PHPCGFactory {
 		getComment();
 		ParseVar.ParseInterRelationship();
 		
-		for(Long topId: topFunIds) {
+		HashSet<Long> save = new HashSet<Long>(topFunIds);
+		for(Long topId: save) {
 			String path = getDir(topId);
-			if(!path.contains("/vendor/")) {
-				path2TopFile.put(path, topId);
+			//we do not consider vendor files
+			if(path.contains("/vendor/")) {
+				topFunIds.remove(topId);
 			}
 		}
 		
@@ -204,16 +207,30 @@ public class PHPCGFactory {
 					for(String param: name2Id.keySet()) {
 						//this line contains one param name
 						if(line.contains('$'+param)) {
+							line = line.replace("|", " ");
 							String[] words = line.split("\\s+");
 							for(String word: words) {
+								if(word==null || word.isEmpty()) {
+									continue;
+								}
 								//get the class of param from its comment
 								Long classId = getClassId(word, funcId, namespace);
 								if(classId!=-1) {
 									paramCls.put(name2Id.get(param), classId);
+									break;
 								}
 							}
+							//there is no a valid class name
+							if(!paramCls.containsKey(name2Id.get(param)) && !line.toLowerCase().contains("mix")) {
+								paramCls.put(name2Id.get(param), (long) -2);
+							}
+						}
+						
+						if(name2Id.get(param)==1800671) {
+							System.out.println("18006711800671 "+paramCls.get(name2Id.get(param)));
 						}
 					}
+					
 				}
 				//it is a return line
 				else if(line.contains("@return")) {
@@ -1023,7 +1040,7 @@ public class PHPCGFactory {
 			
 			//we take a conservative way
 			defSet.keySet().parallelStream().forEach(funcKey ->{
-				if(funcKey.contains(functionName)) {
+				if(funcKey.contains(functionName) && !funcKey.equals(functionName)) {
 					for(FunctionDef func: defSet.get(funcKey)){
 						addCallEdge(cg, functionCall, func, prt2cld);
 					}
@@ -1242,6 +1259,7 @@ public class PHPCGFactory {
 				CGNode calleeNode = new CGNode((FunctionDefBase) ASTUnderConstruction.idToNode.get(mtd));
 				mtd2call.add(mtd, caller);
 				mtd2mtd.add(callFunc, mtd);
+				callee2caller.add(mtd, callFunc);
 				cg.addVertex(callerNode);
 				cg.addVertex(calleeNode);
 				cg.addEdge(new CGEdge(callerNode, calleeNode));
@@ -1292,8 +1310,10 @@ public class PHPCGFactory {
 		allFuncDef.add(functionDef.getNodeId());
 		// artificial toplevel functions wrapping toplevel code cannot be called
 		if( functionDef instanceof TopLevelFunctionDef) {
-			topFunIds.add(functionDef.getNodeId());
-			//collectAllFun.add(functionDef.getNodeId());
+			if(functionDef.getFlags().equals("TOPLEVEL_FILE")) {
+				topFunIds.add(functionDef.getNodeId());
+			}
+			
 			return null;
 		}
 			

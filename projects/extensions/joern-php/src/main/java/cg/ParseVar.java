@@ -1,7 +1,4 @@
 package cg;
-
-
-
 import tools.php.ast2cpg.PHPCSVEdgeInterpreter;
 
 
@@ -1921,7 +1918,7 @@ public class ParseVar {
 
 			expValue = new HashSet<String>(ParseExp(expNode)); 
 
-			System.err.println("Get value from statement: "+var+" "+expValue.toString());
+			//System.err.println("Get value from statement: "+var+" "+expValue.toString());
 
 			break;
 
@@ -2002,12 +1999,16 @@ public class ParseVar {
 				}
 
 			}
-
+			
+			break;
+			
+		case "AST_UNSET":
+			expValue.add("-2");
 			break;
 
 		default:
 
-			System.err.println("Unknown root statement type "+Stmtid+" "+rootType);
+			//System.err.println("Unknown root statement type "+Stmtid+" "+rootType);
 
 		}
 
@@ -2450,12 +2451,15 @@ public class ParseVar {
 		Set<Long> sourceId = new HashSet<Long>();
 
 		Set<Long> save = new HashSet<Long>();
-
+		Long input = getSourceId.peek();
 		
 
 		while(!getSourceId.isEmpty()) {
 
 			Long node = getSourceId.poll();
+			if(node>input) {
+				continue;
+			}
 
 			save.add(node);
 
