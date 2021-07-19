@@ -932,7 +932,7 @@ public class StaticAnalysis  {
 								callerNodeID = ((CallExpressionBase) ((AssignmentExpression) callerNode).getRight()).getNodeId();
 							}
 							else {
-								break;
+								continue;
 							}
 							
 							//the same call site
@@ -980,7 +980,8 @@ public class StaticAnalysis  {
 							for(Long id: node.caller) {
 								if(ID2Node.containsKey(id)) {
 									Long astId = ID2Node.get(id).astId;
-									if(astId.equals(func)) {
+									Long callerfunc = ASTUnderConstruction.idToNode.get(astId).getFuncId();
+									if(callerfunc.equals(func)) {
 										contains=true;
 										break;
 									}
@@ -1319,7 +1320,8 @@ public class StaticAnalysis  {
 								if(newInter.equals(node.inter)) {
 									nextNode=node;
 									nextNode.astId=next;
-									nextNode.nodeId++;
+									nextNode.nodeId=++ID;
+									ID2Node.put(nextNode.nodeId, nextNode);
 								}
 								else {
 									nextNode = new Node(++ID, next, newInter, intro, stack);
@@ -1398,7 +1400,8 @@ public class StaticAnalysis  {
 		else if(!node.caller.isEmpty()) {
 			Long caller = node.caller.peek();
 			if(ID2Node.containsKey(caller)) {
-				Long callerID =ID2Node.get(caller).astId;
+				Node callerNode = ID2Node.get(caller);
+				Long callerID = ID2Node.get(caller).astId;
 				List<Long> nextStmts=CSVCFGExporter.cfgSave.get(callerID);
 				//next=CSVCFGExporter.cfgSave.get(next).get(0);
 				Stack<Long> callStack = ID2Node.get(caller).caller;
@@ -1419,6 +1422,20 @@ public class StaticAnalysis  {
 						}
 					}
 					Node nextNode = new Node(++ID, next, node.inter, intro, callStack);
+					//delete duplicate
+					boolean flag=false;
+					if(afterCaller.containsKey(callerNode)) {
+						List<Node> afters = afterCaller.get(callerNode);
+						for(Node after: afters) {
+							//the two returns have the same context
+							if(after.inter.equals(nextNode.inter) && after.intro.equals(nextNode.intro)) {
+								flag=true;
+							}
+						}
+					}
+					if(flag==false) {
+						afterCaller.add(callerNode, nextNode);
+					}
 					//iterate
 					traverse(nextNode, false, back);
 					break;
@@ -1428,7 +1445,7 @@ public class StaticAnalysis  {
 		//we do not end here, instead we iterate the next statement related to inter variable
 		else if(node.caller==null || node.caller.isEmpty()) {
 			//we do not iterate very deep
-			if(back.size()>10) {
+			if(back.size()>6) {
 				return false;
 			}
 			//find next related statements
@@ -1909,6 +1926,7 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
 
 

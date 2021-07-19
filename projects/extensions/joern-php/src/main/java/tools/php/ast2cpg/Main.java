@@ -106,7 +106,7 @@ public class Main {
 		//PruneCG();
 		//PruneCG.handle();
 		
-		StaticAnalysis detecter = new StaticAnalysis();
+		//StaticAnalysis detecter = new StaticAnalysis();
 		
 		csvWriter.closeEdgeFile();
 		cgcsvWriter.closeEdgeFile();
@@ -130,4 +130,5 @@ public class Main {
 	}
 
 }
+
 
