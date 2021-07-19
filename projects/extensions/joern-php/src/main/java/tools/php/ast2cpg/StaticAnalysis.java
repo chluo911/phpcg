@@ -51,6 +51,7 @@ public class StaticAnalysis  {
 	public static MultiHashMap<Long, Long> caller2callee = new MultiHashMap<Long, Long>();
 	public static MultiHashMap<Long, Long> callee2caller = new MultiHashMap<Long, Long>();
 	public static HashSet<Long> validFunc = new HashSet<Long>();
+	public static MultiHashMap<Node, Node> afterCaller = new MultiHashMap<Node, Node>();
 	
 	
 	public StaticAnalysis() {
@@ -150,7 +151,7 @@ public class StaticAnalysis  {
 					}
 					//it is in the left hand
 					else if(leftHandId.equals(prop)){
-						.add(stmt, prop);
+						dstProp.add(stmt, prop);
 					}
 					//get the function of prop
 					Long funcID = stmtNode.getFuncId();
@@ -588,6 +589,62 @@ public class StaticAnalysis  {
 							}
 							return false;
 						}
+						
+						//first check if we have analyzed this call site, if it is, we get the taint status from function summary.
+						for(Node call: afterCaller.keySet()) {
+							ASTNode callerNode = ASTUnderConstruction.idToNode.get(call.astId);
+							Long callerNodeID = null;
+							if(callerNode instanceof CallExpressionBase) {
+								callerNodeID = callerNode.getNodeId();
+							}
+							//the caller is an assignment
+							else if(callerNode instanceof AssignmentExpression && ((AssignmentExpression) callerNode).getRight() instanceof CallExpressionBase) {
+								callerNodeID = ((CallExpressionBase) ((AssignmentExpression) callerNode).getRight()).getNodeId();
+							}
+							else {
+								break;
+							}
+							
+							//the same callsite
+							if(PHPCGFactory.call2mtd.containsKey(callerNodeID)&&PHPCGFactory.call2mtd.get(callerNodeID).equals(PHPCGFactory.call2mtd.get(node.astId))) {
+								//the same context information
+								if(call.inter.equals(node.inter)) {
+									while(CSVCFGExporter.cfgSave.containsKey(stmt)) {
+										Long next = CSVCFGExporter.cfgSave.get(stmt).get(0);
+										//we do not backwardly analyze, unless it is an exit node 
+										if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
+											if(CSVCFGExporter.cfgSave.get(stmt).size()>1) {
+												Long tmp1 = CSVCFGExporter.cfgSave.get(stmt).get(1);
+												if(tmp1>stmt) {
+													next=tmp1;
+												}
+												else {
+													break;
+												}
+											}
+											else {
+												break;
+											}
+										}
+										List<Node> afters=afterCaller.get(call);
+										for(Node after: afters) {
+											Set<Long> save1=new HashSet<Long>(node.intro);
+											HashMap<String, Long> save2=new HashMap<String, Long>(after.inter);
+											//the function changes intro
+											if(!after.intro.equals(call.intro)) {
+												save1.add(node.nodeId);
+											}
+											Node nextNode = new Node(++ID, next, save2, save1, node.caller);  
+											traverse(nextNode, false, back);
+										}
+										return false;
+									}
+								}
+								//we find the call site but the context is different, so we break here.
+								break;
+							}
+						}
+						
 						for(Long func: targetFuncs) {
 							//the callee is also the caller
 							boolean contains = false;
@@ -601,9 +658,47 @@ public class StaticAnalysis  {
 									}
 								}
 							}
+							//the backlist contains the caller
+							if(back.contains(func)) {
+								contains=true;
+							}
 							//we have already analyzed this function
 							if(contains==true) {
-								continue;
+								while(CSVCFGExporter.cfgSave.containsKey(stmt)) {
+									Long next = CSVCFGExporter.cfgSave.get(stmt).get(0);
+									Set<Long> intro=node.intro;
+									Stack<Long> stack =(Stack<Long>) node.caller.clone();
+									//we do not backwardly analyze, unless it is an exit node 
+									if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
+										if(CSVCFGExporter.cfgSave.get(stmt).size()>1) {
+											Long tmp = CSVCFGExporter.cfgSave.get(stmt).get(1);
+											if(tmp>stmt) {
+												next=tmp;
+											}
+											else {
+												break;
+											}
+										}
+										//we do not analyze the node we have analyzed
+										else {
+											break;
+										}
+									}
+									Node nextNode = new Node(++ID, next, node.inter, intro, stack);
+									Long call=(long) 0;
+									if(!stack.isEmpty()) {
+										call=stack.peek();
+									}
+									//we only iterate the next related statement, unless the next stmt is exit node,  
+									if((isvalid(next)&&isUsed(next, nextNode, call))|| !CSVCFGExporter.cfgSave.containsKey(next)) {
+										traverse(nextNode, false, back);
+										break;
+									}
+									else {
+										stmt=next;
+									}
+								}
+								return false;
 							}
 							
 							FunctionDef funcNode = (FunctionDef) ASTUnderConstruction.idToNode.get(func);
@@ -647,7 +742,8 @@ public class StaticAnalysis  {
 								}
 								//the function is related
 								if(flag==true) {
-									ASTNode nextstmt = funcNode.getContent().getStatement(0);
+									Long nextstmtId = CSVCFGExporter.cfgSave.get(funcNode.getNodeId()+1).get(0);
+									ASTNode nextstmt = ASTUnderConstruction.idToNode.get(nextstmtId);
 									nextId = nextstmt.getNodeId();
 									Node nextNode = new Node(++ID, nextId, node.inter, intro, callStack);
 									traverse(nextNode, false, back);
@@ -825,6 +921,60 @@ public class StaticAnalysis  {
 							return false;
 						}
 						//it is user-defined function
+						for(Node call: afterCaller.keySet()) {
+							ASTNode callerNode = ASTUnderConstruction.idToNode.get(call.astId);
+							Long callerNodeID = null;
+							if(callerNode instanceof CallExpressionBase) {
+								callerNodeID = callerNode.getNodeId();
+							}
+							//the caller is an assignment
+							else if(callerNode instanceof AssignmentExpression && ((AssignmentExpression) callerNode).getRight() instanceof CallExpressionBase) {
+								callerNodeID = ((CallExpressionBase) ((AssignmentExpression) callerNode).getRight()).getNodeId();
+							}
+							else {
+								break;
+							}
+							
+							//the same call site
+							if(PHPCGFactory.call2mtd.containsKey(callerNodeID)&&PHPCGFactory.call2mtd.get(callerNodeID).equals(PHPCGFactory.call2mtd.get(callsite.getNodeId()))) {
+								//the same context information
+								if(call.inter.equals(node.inter)) {
+									while(CSVCFGExporter.cfgSave.containsKey(stmt)) {
+										Long next = CSVCFGExporter.cfgSave.get(stmt).get(0);
+										//we do not backwardly analyze, unless it is an exit node 
+										if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
+											if(CSVCFGExporter.cfgSave.get(stmt).size()>1) {
+												Long tmp1 = CSVCFGExporter.cfgSave.get(stmt).get(1);
+												if(tmp1>stmt) {
+													next=tmp1;
+												}
+												else {
+													break;
+												}
+											}
+											else {
+												break;
+											}
+										}
+										List<Node> afters=afterCaller.get(call);
+										for(Node after: afters) {
+											Set<Long> save1=new HashSet<Long>(node.intro);
+											HashMap<String, Long> save2=new HashMap<String, Long>(after.inter);
+											//the function changes intro
+											if(!after.intro.equals(call.intro)) {
+												save1.add(node.nodeId);
+											}
+											Node nextNode = new Node(++ID, next, save2, save1, node.caller);  
+											traverse(nextNode, false, back);
+										}
+										return false;
+									}
+								}
+								//we find the call site but the context is different, so we break here.
+								break;
+							}
+						}
+						
 						for(Long func: targetFuncs) {
 							boolean contains = false;
 							for(Long id: node.caller) {
@@ -832,13 +982,50 @@ public class StaticAnalysis  {
 									Long astId = ID2Node.get(id).astId;
 									if(astId.equals(func)) {
 										contains=true;
-										continue;
+										break;
 									}
 								}
 							}
-							//we have already analyzed this function
+							if(back.contains(func)) {
+								contains=true;
+							}
+							//we have already analyzed this function, so we iterate the next stmt
 							if(contains==true) {
-								continue;
+								while(CSVCFGExporter.cfgSave.containsKey(stmt)) {
+									Long next = CSVCFGExporter.cfgSave.get(stmt).get(0);
+									Set<Long> intro=node.intro;
+									Stack<Long> stack =(Stack<Long>) node.caller.clone();
+									//we do not backwardly analyze, unless it is an exit node 
+									if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
+										if(CSVCFGExporter.cfgSave.get(stmt).size()>1) {
+											Long tmp = CSVCFGExporter.cfgSave.get(stmt).get(1);
+											if(tmp>stmt) {
+												next=tmp;
+											}
+											else {
+												break;
+											}
+										}
+										//we donot analyze the node we have analyzed
+										else {
+											break;
+										}
+									}
+									Node nextNode = new Node(++ID, next, node.inter, intro, stack);
+									Long call=(long) 0;
+									if(!stack.isEmpty()) {
+										call=stack.peek();
+									}
+									//we only iterate the next related statement, unless the next stmt is exit node,  
+									if((isvalid(next)&&isUsed(next, nextNode, call))|| !CSVCFGExporter.cfgSave.containsKey(next)) {
+										traverse(nextNode, false, back);
+										break;
+									}
+									else {
+										stmt=next;
+									}
+								}
+								return false;
 							}
 							
 							FunctionDef funcNode = (FunctionDef) ASTUnderConstruction.idToNode.get(func);
@@ -886,7 +1073,8 @@ public class StaticAnalysis  {
 								}
 								//the function is related
 								if(flag==true) {
-									ASTNode nextstmt = funcNode.getContent().getStatement(0);
+									Long nextstmtId = CSVCFGExporter.cfgSave.get(funcNode.getNodeId()+1).get(0);
+									ASTNode nextstmt = ASTUnderConstruction.idToNode.get(nextstmtId);
 									nextId = nextstmt.getNodeId();
 									Node nextNode = new Node(++ID, nextId, node.inter, intro, callStack);
 									traverse(nextNode, false, back);
@@ -1022,6 +1210,20 @@ public class StaticAnalysis  {
 									}
 								}
 								Node nextNode = new Node(++ID, next, tmp.inter, save, callerNode.caller);
+								//delete duplicate
+								boolean flag=false;
+								if(afterCaller.containsKey(callerNode)) {
+									List<Node> afters = afterCaller.get(callerNode);
+									for(Node after: afters) {
+										//the two returns have the same context
+										if(after.inter.equals(nextNode.inter) && after.intro.equals(nextNode.intro)) {
+											flag=true;
+										}
+									}
+								}
+								if(flag==false) {
+									afterCaller.add(callerNode, nextNode);
+								}
 								traverse(nextNode, false, back);
 								break;
 							}
@@ -1044,7 +1246,20 @@ public class StaticAnalysis  {
 									}
 								}
 								Node nextNode = new Node(++ID, next, node.inter, callerNode.intro, callerNode.caller);
-								//iterate
+								//delete duplicate
+								boolean flag=false;
+								if(afterCaller.containsKey(callerNode)) {
+									List<Node> afters = afterCaller.get(callerNode);
+									for(Node after: afters) {
+										//the two returns have the same context
+										if(after.inter.equals(nextNode.inter) && after.intro.equals(nextNode.intro)) {
+											flag=true;
+										}
+									}
+								}
+								if(flag==false) {
+									afterCaller.add(callerNode, nextNode);
+								}
 								traverse(nextNode, false, back);
 								break;
 							}
@@ -1245,7 +1460,7 @@ public class StaticAnalysis  {
 							if(!node.intro.isEmpty()) {
 								intro.add(++ID);
 							}
-							Node nextNode = new Node(ID, next, node.inter, intro, node.caller);
+							Node nextNode = new Node(++ID, next, node.inter, intro, node.caller);
 							LinkedList<Long> backup = new LinkedList<Long>(back);
 							System.out.println("Back: "+funcID+" "+next);
 							traverse(nextNode, false, backup);
