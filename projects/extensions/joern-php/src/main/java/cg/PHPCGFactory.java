@@ -1,7 +1,11 @@
 package cg;
 
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +32,7 @@ import ast.functionDef.ParameterList;
 import ast.php.declarations.ClassDef;
 import ast.php.expressions.ArrayElement;
 import ast.php.expressions.ArrayExpression;
+import ast.php.expressions.IncludeOrEvalExpression;
 import ast.php.expressions.MethodCallExpression;
 import ast.php.expressions.StaticCallExpression;
 import ast.php.functionDef.Closure;
@@ -67,6 +72,7 @@ public class PHPCGFactory {
 	//maintains a list of non-static method calls
 	private static LinkedList<MethodCallExpression> nonStaticMethodCalls = new LinkedList<MethodCallExpression>();
 	//resolve variable value
+	private static HashMap<String, Long> topLevelFunctionDefs = new HashMap<String, Long>();
 	
 	//private static ParseVar parsevar = new ParseVar();
 	public static HashMap<String, Long> classDef = new HashMap<String, Long>();
@@ -128,8 +134,10 @@ public class PHPCGFactory {
 	//public static Set<String> indirect = new HashSet<String>();
 	public static HashSet<Long> sinks = new HashSet<Long>();
 	public static List<Long> objCaller = new ArrayList<Long>();
-	public static MultiHashMap<Long, Long> file2file = new MultiHashMap<Long, Long>();
+	//public static MultiHashMap<Long, Long> file2file = new MultiHashMap<Long, Long>();
 	public static MultiHashMap<Long, Long> callee2caller = new MultiHashMap<Long, Long>();
+	//public static HashMap<Long, String> caller2path = new HashMap<Long, String>();
+	public static MultiHashMap<String, Long> path2callee = new MultiHashMap<String, Long>();
 	
 	//public static Set<FunctionDef> constructSet = new HashSet<FunctionDef>();
 	/**
@@ -147,6 +155,7 @@ public class PHPCGFactory {
 		
 		init();
 		
+		createSpiderEdges(cg);
 		System.err.println("@");
 		createFunctionCallEdges(cg);
 		System.err.println("@@");
@@ -160,6 +169,117 @@ public class PHPCGFactory {
 		reset(cg);
 		
 		return cg;
+	}
+
+	private static void createSpiderEdges(CG cg) {
+		
+		File profile = new File("/data/xdebug/joomla/");
+		File[] files = profile.listFiles();
+		if (files != null) {
+		    for (File file : files) {
+		    	try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+		    	    String line;
+		    	    while ((line = br.readLine()) != null) {
+		    	       String[] words = line.split("\\s+");
+		    	      // System.out.println("words "+Arrays.toString(words));
+		    	       if(words.length==6) {
+		    	    	   String target = words[4];
+		    	    	   String path = words[5].replace("/var/www/html/", "/home/users/chluo/goal/");
+		    	    	   //require or include
+		    	    	   if(target.startsWith("include(") || target.startsWith("require(") ||
+		    	    			   target.startsWith("require_once(") || target.startsWith("include_once(")) {
+		    	    		   target = target.replace("/var/www/html/", "/home/users/chluo/goal/");
+		    	    		   target = target.substring(target.indexOf("/"));
+		    	    		   target = target.replace(")", "");
+		    	    		   //we find the included file
+		    	    		   if(topLevelFunctionDefs.containsKey(target)) {
+		    	    			   Long targetID = topLevelFunctionDefs.get(target);
+		    	    			   if(path2callee.containsKey(path) && path2callee.get(path).contains(targetID)) {
+		    	    				   path2callee.add(path, targetID);
+		    	    			   }
+		    	    		   }
+		    	    	   }
+		    	    	   //general function calls
+		    	    	   else {
+		    	    		   target = target.replace("->", "::");
+		    	    		   //it is a method
+		    	    		   if(target.contains("::")){
+		    	    			   String className=target.substring(0, target.indexOf("::"));
+		    	    			   String rest=target.substring(target.indexOf("::"));
+		    	    			   rest=rest.replace("::__construct", "");
+		    	    			   Long classID = getClsId(className, "-1");
+		    	    			   String methodkey = classID+rest;
+		    	    			   constructorDefs.keySet().parallelStream().forEach(funcKey ->{
+		    	    					if(funcKey.equals(methodkey)) {
+		    	    						for(FunctionDef func: constructorDefs.get(funcKey)){
+		    	    							if(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId())) {
+		    	    								path2callee.add(path, func.getNodeId());
+		    	    							}
+		    	    						}
+		    	    					}
+		    	    			   });
+		    	    			   nonStaticMethodDefs.keySet().parallelStream().forEach(funcKey ->{
+		    	    					if(funcKey.equals(methodkey)) {
+		    	    						for(FunctionDef func: constructorDefs.get(funcKey)){
+		    	    							if(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId())) {
+		    	    								path2callee.add(path, func.getNodeId());
+		    	    							}
+		    	    						}
+
+		    	    					}
+		    	    			   });
+		    	    			   staticMethodDefs.keySet().parallelStream().forEach(funcKey ->{
+		    	    					if(funcKey.equals(methodkey)) {
+		    	    						for(FunctionDef func: constructorDefs.get(funcKey)){
+		    	    							if(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId())) {
+		    	    								path2callee.add(path, func.getNodeId());
+		    	    							}
+		    	    						}
+		    	    					}
+		    	    			   });
+		    	    		   }
+		    	    		   //it is a function
+		    	    		   else {
+		    	    			   String functionKey = target;
+		    	    			   functionDefs.keySet().parallelStream().forEach(funcKey ->{
+		    	    				   if(funcKey.equals(functionKey)) {
+		    	    					   for(FunctionDef func: functionDefs.get(funcKey)){
+		    	    						   if(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId())) {
+		    	    								path2callee.add(path, func.getNodeId());
+		    	    						   }
+		    	    					   }
+		    	    				   }
+		    	    			   });
+		    	    		   }
+		    	    	   }   
+		    	    	   //path2callee.add(path, target);
+		    	       }
+		    	    }
+		    	} catch(Exception e) {
+		    		
+		    	}
+		    }
+		  } else {
+		    // Handle the case where dir is not really a directory.
+		    // Checking dir.isDirectory() above would not be sufficient
+		    // to avoid race conditions with another process that deletes
+		    // directories.
+		  }
+		
+		System.out.println("pat2callee: "+path2callee);
+		//require and include
+		for(Long ildId: toTopLevelFile.includeLoc) {
+			String path = getDir(ildId);
+			ASTNode require = ASTUnderConstruction.idToNode.get(ildId);
+			path=path+":"+require.getLocation().startLine;
+			if(path2callee.containsKey(path)) {
+				//one line may call multiple target functions
+				System.out.println("require path "+path);
+				call2mtd.addAll(ildId, path2callee.get(path));
+				continue;
+			}
+		}
+		
 	}
 
 	static void init() {
@@ -316,6 +436,7 @@ public class PHPCGFactory {
 		return prtList;
 	}
 
+	
 	private static void createFunctionCallEdges(CG cg) {
 		
 		int x1 = functionCalls.size();
@@ -326,6 +447,14 @@ public class PHPCGFactory {
 			//System.err.println(x1+" "+c1+" "+functionCall.getNodeId());
 			c1.incrementAndGet();
 			System.err.println("function: "+c1+" "+x1);
+			
+			String path = getDir(functionCall.getNodeId());
+			path=path+":"+functionCall.getLocation().startLine;
+			if(path2callee.containsKey(path)) {
+				//one line may call multiple target functions
+				call2mtd.addAll(functionCall.getNodeId(), path2callee.get(path));
+				continue;
+			}
 			
 			// make sure the call target is statically known
 			if( functionCall.getTargetFunc() instanceof Identifier) {
@@ -572,6 +701,16 @@ public class PHPCGFactory {
 			c3.incrementAndGet();
 			System.err.println(x3+" "+c3+" "+constructorCall.getNodeId());
 			// make sure the call target is statically known
+			
+			String path = getDir(constructorCall.getNodeId());
+			path=path+":"+constructorCall.getLocation().startLine;
+			if(path2callee.containsKey(path)) {
+				//one line may call multiple target functions
+				System.out.println("construct:" +path);
+				call2mtd.addAll(constructorCall.getNodeId(), path2callee.get(path));
+				continue;
+			}
+			
 			if( constructorCall.getTargetClass() instanceof Identifier) {
 				
 				Identifier classIdentifier = (Identifier)constructorCall.getTargetClass();
@@ -712,6 +851,14 @@ public class PHPCGFactory {
 			c2.incrementAndGet();
 			System.err.println(x2+" "+c2+" "+staticCall.getNodeId());
 			
+			String path = getDir(staticCall.getNodeId());
+			path=path+":"+staticCall.getLocation().startLine;
+			if(path2callee.containsKey(path)) {
+				//one line may call multiple target functions
+				call2mtd.addAll(staticCall.getNodeId(), path2callee.get(path));
+				continue;
+			}
+			
 			// make sure the call target is statically known
 			if( staticCall.getTargetClass() instanceof Identifier
 					&& staticCall.getTargetFunc() instanceof StringExpression) {
@@ -826,6 +973,14 @@ public class PHPCGFactory {
 		//nonStaticMethodCalls.parallelStream().forEach(methodCall -> {
 			c4.getAndIncrement();
 			System.err.println(x4+" "+c4+" "+methodCall.getNodeId());
+			
+			String path = getDir(methodCall.getNodeId());
+			path=path+":"+methodCall.getLocation().startLine;
+			if(path2callee.containsKey(path)) {
+				//one line may call multiple target functions
+				call2mtd.addAll(methodCall.getNodeId(), path2callee.get(path));
+				continue;
+			}
 			
 			if(filterTest(methodCall.getEnclosingClass()) ||
 					filterTest(getDir(methodCall.getNodeId()))) {
@@ -1204,9 +1359,7 @@ public class PHPCGFactory {
 			}
 			if(!(call2mtd.containsKey(functionCall.getNodeId()) && call2mtd.get(functionCall.getNodeId()).contains(functionDef.getNodeId()))) {
 				call2mtd.add(functionCall.getNodeId(), functionDef.getNodeId());
-				//mtd2call.add(functionDef.getNodeId(), functionCall.getNodeId());
-				//mtd2mtd.add(functionCall.getFuncId(), functionDef.getNodeId());
-				file2file.add(toTopLevelFile.getTopLevelId(functionCall.getNodeId()), toTopLevelFile.getTopLevelId(functionDef.getNodeId()));
+				//file2file.add(toTopLevelFile.getTopLevelId(functionCall.getNodeId()), toTopLevelFile.getTopLevelId(functionDef.getNodeId()));
 			}
         } finally {
             lock.unlock();
@@ -1313,7 +1466,8 @@ public class PHPCGFactory {
 			if(functionDef.getFlags().equals("TOPLEVEL_FILE")) {
 				topFunIds.add(functionDef.getNodeId());
 			}
-			
+			String path = getDir(functionDef.getNodeId());
+			topLevelFunctionDefs.put(path, functionDef.getNodeId());
 			return null;
 		}
 			
@@ -1530,6 +1684,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 
