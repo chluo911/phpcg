@@ -17,7 +17,7 @@ public class CGNode {
 		setIsCallee( true);
 	}
 	
-	public CGNode( CallExpressionBase node) {
+	public CGNode( ASTNode node) {
 		init( node);
 		setIsCallee( false);
 	}
@@ -67,3 +67,4 @@ public class CGNode {
 		return getASTNode().toString();
 	}
 }
+

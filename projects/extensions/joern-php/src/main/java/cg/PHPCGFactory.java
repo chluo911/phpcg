@@ -4,6 +4,7 @@ package cg;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -177,24 +178,33 @@ public class PHPCGFactory {
 		File[] files = profile.listFiles();
 		if (files != null) {
 		    for (File file : files) {
+		    	try {
+					System.out.println("Filename: "+file.getCanonicalPath());
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 		    	try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 		    	    String line;
 		    	    while ((line = br.readLine()) != null) {
+		    	       line = line.replaceAll("[^\\x00-\\x7F]", " ");	
 		    	       String[] words = line.split("\\s+");
-		    	      // System.out.println("words "+Arrays.toString(words));
+		    	       System.out.println("words "+Arrays.toString(words));
 		    	       if(words.length==6) {
 		    	    	   String target = words[4];
+		    	    	   target = target.replace("/var/www/html/", "/home/users/chluo/goal/");
+		    	    	   target = target.replace("()", "");
 		    	    	   String path = words[5].replace("/var/www/html/", "/home/users/chluo/goal/");
 		    	    	   //require or include
 		    	    	   if(target.startsWith("include(") || target.startsWith("require(") ||
 		    	    			   target.startsWith("require_once(") || target.startsWith("include_once(")) {
-		    	    		   target = target.replace("/var/www/html/", "/home/users/chluo/goal/");
 		    	    		   target = target.substring(target.indexOf("/"));
 		    	    		   target = target.replace(")", "");
+		    	    		   System.out.println("target: "+target);
 		    	    		   //we find the included file
 		    	    		   if(topLevelFunctionDefs.containsKey(target)) {
 		    	    			   Long targetID = topLevelFunctionDefs.get(target);
-		    	    			   if(path2callee.containsKey(path) && path2callee.get(path).contains(targetID)) {
+		    	    			   if(!(path2callee.containsKey(path) && path2callee.get(path).contains(targetID))) {
 		    	    				   path2callee.add(path, targetID);
 		    	    			   }
 		    	    		   }
@@ -202,6 +212,7 @@ public class PHPCGFactory {
 		    	    	   //general function calls
 		    	    	   else {
 		    	    		   target = target.replace("->", "::");
+		    	    		   System.out.println("className: "+target);
 		    	    		   //it is a method
 		    	    		   if(target.contains("::")){
 		    	    			   String className=target.substring(0, target.indexOf("::"));
@@ -212,7 +223,7 @@ public class PHPCGFactory {
 		    	    			   constructorDefs.keySet().parallelStream().forEach(funcKey ->{
 		    	    					if(funcKey.equals(methodkey)) {
 		    	    						for(FunctionDef func: constructorDefs.get(funcKey)){
-		    	    							if(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId())) {
+		    	    							if(!(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId()))) {
 		    	    								path2callee.add(path, func.getNodeId());
 		    	    							}
 		    	    						}
@@ -221,7 +232,7 @@ public class PHPCGFactory {
 		    	    			   nonStaticMethodDefs.keySet().parallelStream().forEach(funcKey ->{
 		    	    					if(funcKey.equals(methodkey)) {
 		    	    						for(FunctionDef func: constructorDefs.get(funcKey)){
-		    	    							if(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId())) {
+		    	    							if(!(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId()))) {
 		    	    								path2callee.add(path, func.getNodeId());
 		    	    							}
 		    	    						}
@@ -231,7 +242,7 @@ public class PHPCGFactory {
 		    	    			   staticMethodDefs.keySet().parallelStream().forEach(funcKey ->{
 		    	    					if(funcKey.equals(methodkey)) {
 		    	    						for(FunctionDef func: constructorDefs.get(funcKey)){
-		    	    							if(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId())) {
+		    	    							if(!(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId()))) {
 		    	    								path2callee.add(path, func.getNodeId());
 		    	    							}
 		    	    						}
@@ -244,7 +255,7 @@ public class PHPCGFactory {
 		    	    			   functionDefs.keySet().parallelStream().forEach(funcKey ->{
 		    	    				   if(funcKey.equals(functionKey)) {
 		    	    					   for(FunctionDef func: functionDefs.get(funcKey)){
-		    	    						   if(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId())) {
+		    	    						   if(!(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId()))) {
 		    	    								path2callee.add(path, func.getNodeId());
 		    	    						   }
 		    	    					   }
@@ -1408,7 +1419,7 @@ public class PHPCGFactory {
 			i2=Math.max(i2, call2mtd.get(caller).size());
 			Long callFunc = ASTUnderConstruction.idToNode.get(caller).getFuncId();
 			for(Long mtd: call2mtd.get(caller)) {
-				CGNode callerNode = new CGNode((CallExpressionBase) ASTUnderConstruction.idToNode.get(caller));
+				CGNode callerNode = new CGNode(ASTUnderConstruction.idToNode.get(caller));
 				CGNode calleeNode = new CGNode((FunctionDefBase) ASTUnderConstruction.idToNode.get(mtd));
 				mtd2call.add(mtd, caller);
 				mtd2mtd.add(callFunc, mtd);
@@ -1684,6 +1695,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 
