@@ -18,6 +18,7 @@ import ast.expressions.PropertyExpression;
 import ast.expressions.Variable;
 import ast.functionDef.ParameterBase;
 import ast.functionDef.ParameterList;
+import ast.php.expressions.IncludeOrEvalExpression;
 import ast.php.functionDef.FunctionDef;
 import ast.php.functionDef.Parameter;
 import ast.php.functionDef.TopLevelFunctionDef;
@@ -197,6 +198,7 @@ public class StaticAnalysis  {
 			String iden = getDIMIdentity(srcNode);
 			name2Stmt.add(iden, src);
 		}
+		System.out.println("original size: "+ PHPCGFactory.call2mtd.totalSize()+" "+PHPCGFactory.mtd2call.totalSize());
 		
 		validFunc.addAll(PHPCGFactory.topFunIds);
 		for(Long func: PHPCGFactory.topFunIds) {
@@ -210,8 +212,7 @@ public class StaticAnalysis  {
 		}
 		
 		int i=0,j=0;
-		MultiHashMap<Long, Long> save = new MultiHashMap<Long, Long>();
-		System.out.println("original size: "+ PHPCGFactory.call2mtd.totalSize()+" "+PHPCGFactory.mtd2call.totalSize());
+		MultiHashMap<Long, Long> save = new MultiHashMap<Long, Long>();	
 		for(Long caller: PHPCGFactory.call2mtd.keySet()) {
 			List<Long> targets = PHPCGFactory.call2mtd.get(caller);
 			for(Long target: targets) {
@@ -291,7 +292,17 @@ public class StaticAnalysis  {
 				if(PHPCGFactory.mtd2mtd.containsKey(node)) {
 					List<Long> callees = PHPCGFactory.mtd2mtd.get(node);
 					for(Long callee: callees) {
+						ASTNode target = ASTUnderConstruction.idToNode.get(callee);
 						if(!ret.contains(callee)) {
+							if(PHPCGFactory.getDir(callee).contains("test") ||
+									PHPCGFactory.getDir(callee).contains("Test") ||
+									PHPCGFactory.getDir(callee).contains("phpunit") ||
+									target.getEnclosingClass().contains("test") ||
+									target.getEnclosingClass().contains("Test") ||
+									target.getEscapedCodeStr().contains("test") ||
+									target.getEscapedCodeStr().contains("Test")) {
+								continue;
+							}
 							que.add(callee);
 						}
 					}
@@ -423,9 +434,6 @@ public class StaticAnalysis  {
 			
 			//check if the statement has data flow relationship with taint variables
 			HashMap<Long, Long> related = isrelated(stmt, node.intro, node.inter, topCaller);
-			if(node.astId==1304597) {
-				System.out.println("13045971304597 "+related);
-			}
 			//this statement has been sanitized
 			if(!valid) {
 				Node nextNode = null;
@@ -542,7 +550,7 @@ public class StaticAnalysis  {
 					ASTNode stmtNode = ASTUnderConstruction.idToNode.get(stmt);
 					//save the caller of the target function
 					//this statement is a function call
-					if(stmtNode instanceof CallExpressionBase) {
+					if(stmtNode instanceof CallExpressionBase || stmtNode instanceof IncludeOrEvalExpression) {
 						Long caller = node.nodeId;
 						Stack<Long> callStack = (Stack<Long>) node.caller.clone();
 						callStack.push(caller);
