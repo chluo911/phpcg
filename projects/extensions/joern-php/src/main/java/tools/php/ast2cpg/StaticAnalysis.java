@@ -297,10 +297,8 @@ public class StaticAnalysis  {
 							if(PHPCGFactory.getDir(callee).contains("test") ||
 									PHPCGFactory.getDir(callee).contains("Test") ||
 									PHPCGFactory.getDir(callee).contains("phpunit") ||
-									target.getEnclosingClass().contains("test") ||
-									target.getEnclosingClass().contains("Test") ||
-									target.getEscapedCodeStr().contains("test") ||
-									target.getEscapedCodeStr().contains("Test")) {
+									target.getEnclosingClass()!=null && (target.getEnclosingClass().contains("test") || target.getEnclosingClass().contains("Test")) ||
+									target.getEscapedCodeStr()!=null && (target.getEscapedCodeStr().contains("test") || target.getEscapedCodeStr().contains("Test"))) {
 								continue;
 							}
 							que.add(callee);
@@ -554,11 +552,13 @@ public class StaticAnalysis  {
 						Long caller = node.nodeId;
 						Stack<Long> callStack = (Stack<Long>) node.caller.clone();
 						callStack.push(caller);
-						ArgumentList args = ((CallExpressionBase) stmtNode).getArgumentList();
+						ArgumentList args = null;
+						if(stmtNode instanceof CallExpressionBase) {
+							 args = ((CallExpressionBase) stmtNode).getArgumentList();
+						}
 						//get the target function of this call site
 						List<Long> targetFuncs = PHPCGFactory.call2mtd.get(stmt);
 						//from argument to the related stmt in caller function
-						HashMap<Long, Long> param2caller = new HashMap<Long, Long>();
 						//built-in function
 						if(targetFuncs==null || targetFuncs.isEmpty()){
 							while(CSVCFGExporter.cfgSave.containsKey(stmt)) {
@@ -716,18 +716,23 @@ public class StaticAnalysis  {
 							}
 							//check weather params are tainted
 							Set<Long> intro = new HashSet<Long>();
-							for(int i=0; i<args.size(); i++) {
-								ASTNode arg = args.getArgument(i); 
-								for(Long taint: related.keySet()) {
-									//the ith argument is tainted
-									if(taint.equals(arg.getNodeId())) {
-										if(funcNode.getParameterList().size()<=i) {
-											continue;
+							HashMap<Long, Long> param2caller = new HashMap<Long, Long>();
+							
+							//this is a function call instead of a require statement
+							if(args!=null) {
+								for(int i=0; i<args.size(); i++) {
+									ASTNode arg = args.getArgument(i); 
+									for(Long taint: related.keySet()) {
+										//the ith argument is tainted
+										if(taint.equals(arg.getNodeId())) {
+											if(funcNode.getParameterList().size()<=i) {
+												continue;
+											}
+											//the ith parameter will also be tainted
+											ParameterBase param = funcNode.getParameterList().getParameter(i);
+											intro.add(param.getNodeId());
+											param2caller.put(param.getNodeId(), related.get(taint));
 										}
-										//the ith parameter will also be tainted
-										ParameterBase param = funcNode.getParameterList().getParameter(i);
-										intro.add(param.getNodeId());
-										param2caller.put(param.getNodeId(), related.get(taint));
 									}
 								}
 							}
@@ -1315,7 +1320,12 @@ public class StaticAnalysis  {
 										if(tmp>stmt) {
 											next=tmp;
 										}
+										//by default, we return to the exit node
 										else {
+											Long funcId = ASTUnderConstruction.idToNode.get(stmtId).getFuncId();
+											//exit node ID
+											next = funcId+2;
+											Node nextNode = new Node(++ID, next, newInter, intro, stack);
 											break;
 										}
 									}
@@ -1934,6 +1944,7 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
 
 

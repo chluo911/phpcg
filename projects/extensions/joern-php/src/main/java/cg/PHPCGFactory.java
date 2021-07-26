@@ -138,6 +138,7 @@ public class PHPCGFactory {
 	//public static MultiHashMap<Long, Long> file2file = new MultiHashMap<Long, Long>();
 	public static MultiHashMap<Long, Long> callee2caller = new MultiHashMap<Long, Long>();
 	//public static HashMap<Long, String> caller2path = new HashMap<Long, String>();
+	public static HashSet<String> bwlines = new HashSet<String>();
 	public static MultiHashMap<String, Long> path2callee = new MultiHashMap<String, Long>();
 	
 	//public static Set<FunctionDef> constructSet = new HashSet<FunctionDef>();
@@ -178,18 +179,20 @@ public class PHPCGFactory {
 		File[] files = profile.listFiles();
 		if (files != null) {
 		    for (File file : files) {
-		    	try {
-					System.out.println("Filename: "+file.getCanonicalPath());
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-		    	try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+		    	try (BufferedReader br = new BufferedReader(new FileReader(file), (int) file.length())) {
 		    	    String line;
 		    	    while ((line = br.readLine()) != null) {
-		    	       line = line.replaceAll("[^\\x00-\\x7F]", " ");	
+		    	       //line = line.replaceAll("[^\\x00-\\x7F]", " ");
 		    	       String[] words = line.split("\\s+");
-		    	       System.out.println("words "+Arrays.toString(words));
+		    	       if(words.length!=6) {
+		    	    	   continue;
+		    	       }
+		    	       String iden = words[words.length-1]+words[words.length-2];
+		    	       if(bwlines.contains(iden)) {
+		    	    	   continue;
+		    	       }
+		    	       bwlines.add(iden);
+		    	       //System.out.println("words "+iden);
 		    	       if(words.length==6) {
 		    	    	   String target = words[4];
 		    	    	   target = target.replace("/var/www/html/", "/home/users/chluo/goal/");
@@ -200,7 +203,7 @@ public class PHPCGFactory {
 		    	    			   target.startsWith("require_once(") || target.startsWith("include_once(")) {
 		    	    		   target = target.substring(target.indexOf("/"));
 		    	    		   target = target.replace(")", "");
-		    	    		   System.out.println("target: "+target);
+		    	    		   //System.out.println("target: "+target);
 		    	    		   //we find the included file
 		    	    		   if(topLevelFunctionDefs.containsKey(target)) {
 		    	    			   Long targetID = topLevelFunctionDefs.get(target);
@@ -212,7 +215,7 @@ public class PHPCGFactory {
 		    	    	   //general function calls
 		    	    	   else {
 		    	    		   target = target.replace("->", "::");
-		    	    		   System.out.println("className: "+target);
+		    	    		   //System.out.println("className: "+target);
 		    	    		   //it is a method
 		    	    		   if(target.contains("::")){
 		    	    			   String className=target.substring(0, target.indexOf("::"));
@@ -220,47 +223,46 @@ public class PHPCGFactory {
 		    	    			   rest=rest.replace("::__construct", "");
 		    	    			   Long classID = getClsId(className, "-1");
 		    	    			   String methodkey = classID+rest;
-		    	    			   constructorDefs.keySet().parallelStream().forEach(funcKey ->{
-		    	    					if(funcKey.equals(methodkey)) {
+		    	    			   for(String funcKey: constructorDefs.keySet()) {
+		    	    				   if(funcKey.equals(methodkey)) {
 		    	    						for(FunctionDef func: constructorDefs.get(funcKey)){
 		    	    							if(!(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId()))) {
 		    	    								path2callee.add(path, func.getNodeId());
 		    	    							}
 		    	    						}
 		    	    					}
-		    	    			   });
-		    	    			   nonStaticMethodDefs.keySet().parallelStream().forEach(funcKey ->{
-		    	    					if(funcKey.equals(methodkey)) {
-		    	    						for(FunctionDef func: constructorDefs.get(funcKey)){
-		    	    							if(!(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId()))) {
-		    	    								path2callee.add(path, func.getNodeId());
-		    	    							}
-		    	    						}
-
-		    	    					}
-		    	    			   });
-		    	    			   staticMethodDefs.keySet().parallelStream().forEach(funcKey ->{
-		    	    					if(funcKey.equals(methodkey)) {
-		    	    						for(FunctionDef func: constructorDefs.get(funcKey)){
+		    	    			   }
+		    	    			   for(String funcKey: nonStaticMethodDefs.keySet()) {
+		    	    				   if(funcKey.equals(methodkey)) {
+		    	    						for(FunctionDef func: nonStaticMethodDefs.get(funcKey)){
 		    	    							if(!(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId()))) {
 		    	    								path2callee.add(path, func.getNodeId());
 		    	    							}
 		    	    						}
 		    	    					}
-		    	    			   });
+		    	    			   }
+		    	    			   for(String funcKey: staticMethodDefs.keySet()) {
+		    	    				   if(funcKey.equals(methodkey)) {
+		    	    						for(FunctionDef func: staticMethodDefs.get(funcKey)){
+		    	    							if(!(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId()))) {
+		    	    								path2callee.add(path, func.getNodeId());
+		    	    							}
+		    	    						}
+		    	    					}
+		    	    			   }
 		    	    		   }
 		    	    		   //it is a function
 		    	    		   else {
 		    	    			   String functionKey = target;
-		    	    			   functionDefs.keySet().parallelStream().forEach(funcKey ->{
+		    	    			   for(String funcKey: staticMethodDefs.keySet()) {
 		    	    				   if(funcKey.equals(functionKey)) {
-		    	    					   for(FunctionDef func: functionDefs.get(funcKey)){
-		    	    						   if(!(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId()))) {
+		    	    						for(FunctionDef func: staticMethodDefs.get(funcKey)){
+		    	    							if(!(path2callee.containsKey(path) && path2callee.get(path).contains(func.getNodeId()))) {
 		    	    								path2callee.add(path, func.getNodeId());
-		    	    						   }
-		    	    					   }
-		    	    				   }
-		    	    			   });
+		    	    							}
+		    	    						}
+		    	    					}
+		    	    			   }
 		    	    		   }
 		    	    	   }   
 		    	    	   //path2callee.add(path, target);
@@ -277,7 +279,7 @@ public class PHPCGFactory {
 		    // directories.
 		  }
 		
-		System.out.println("pat2callee: "+path2callee);
+		System.out.println("pat2callee: "+path2callee.size());
 		//require and include
 		for(Long ildId: toTopLevelFile.includeLoc) {
 			String path = getDir(ildId);
@@ -285,7 +287,7 @@ public class PHPCGFactory {
 			path=path+":"+require.getLocation().startLine;
 			if(path2callee.containsKey(path)) {
 				//one line may call multiple target functions
-				System.out.println("require path "+path);
+				//System.out.println("require path "+path);
 				call2mtd.addAll(ildId, path2callee.get(path));
 				continue;
 			}
@@ -717,7 +719,7 @@ public class PHPCGFactory {
 			path=path+":"+constructorCall.getLocation().startLine;
 			if(path2callee.containsKey(path)) {
 				//one line may call multiple target functions
-				System.out.println("construct:" +path);
+				//System.out.println("construct:" +path);
 				call2mtd.addAll(constructorCall.getNodeId(), path2callee.get(path));
 				continue;
 			}
@@ -978,7 +980,7 @@ public class PHPCGFactory {
 	}
 	
 	private static void createNonStaticMethodCallEdges(CG cg) {
-		int x4=nonStaticMethodCalls.size();
+		int x4=nonStaticMethodCalls.size(), x5=0;
 		AtomicInteger c4 = new AtomicInteger(0);
 		for(MethodCallExpression methodCall: nonStaticMethodCalls) {
 		//nonStaticMethodCalls.parallelStream().forEach(methodCall -> {
@@ -989,6 +991,7 @@ public class PHPCGFactory {
 			path=path+":"+methodCall.getLocation().startLine;
 			if(path2callee.containsKey(path)) {
 				//one line may call multiple target functions
+				x5++;
 				call2mtd.addAll(methodCall.getNodeId(), path2callee.get(path));
 				continue;
 			}
@@ -1119,6 +1122,8 @@ public class PHPCGFactory {
 			}
 			
 		};
+		
+		System.out.println("x5: "+x5);
 		
 		Collections.sort(objCaller);
 		Collections.reverse(objCaller);
@@ -1695,6 +1700,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 

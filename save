@@ -1,25 +1,45 @@
-JApplicationWeb->__construct() /Applications/MAMP/htdocs/joomla/libraries/cms/application/cms.php:105 1436967
-JApplicationCms->__construct() /Applications/MAMP/htdocs/joomla/libraries/cms/application/administrator.php:45 1190649
-JApplicationAdministrator->__construct() /Applications/MAMP/htdocs/joomla/libraries/cms/application/cms.php:412 1194574
-JApplicationCms::getInstance() /Applications/MAMP/htdocs/joomla/libraries/joomla/factory.php:125 1191645
-JFactory::getApplication() /Applications/MAMP/htdocs/joomla/administrator/index.php:48 1580399
-JApplicationCms->execute() /Applications/MAMP/htdocs/joomla/administrator/index.php:51 2323817
+JApplicationWeb->__construct() /Applications/MAMP/htdocs/joomla/libraries/cms/application/cms.php:105 727389
+JApplicationCms->__construct() /Applications/MAMP/htdocs/joomla/libraries/cms/application/administrator.php:45 481071
+JApplicationAdministrator->__construct() /Applications/MAMP/htdocs/joomla/libraries/cms/application/cms.php:412 484996
+JApplicationCms::getInstance() /Applications/MAMP/htdocs/joomla/libraries/joomla/factory.php:125 482067
+JFactory::getApplication() /Applications/MAMP/htdocs/joomla/administrator/index.php:48 870821 
+JApplicationCms->execute() /Applications/MAMP/htdocs/joomla/administrator/index.php:51 1614248
 
-JModelList->getUserStateFromRequest() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/models/notes.php:214 
-JInput->get() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/list.php:691
-JModelLegacy->setState() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/models/notes.php:214
-JModelList->_getListQuery() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/list.php:186
-UsersModelNotes->getListQuery() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/list.php:132
-JModelLegacy->getState() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/models/notes.php:116
-JObject->get() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/legacy.php:440
-JDatabaseQuery->where() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/models/notes.php:120
-
-1126556 1126698 1143144 2620880 1136824 2623871 1137083 2625789 1298025 1297667 1194799 1194827 1191234 2323826
+1126556 1126698 1143144 2620880 1136824 2623871 1137083 1916211 588447 588089 485072 485249 481656 1614248
 administrator/index.php
 libraries/cms/application/cms.php X
 libraries/cms/application/administrator.php libraries/cms/application/site.php
 libraries/cms/application/administrator.php
 libraries/cms/component/helper.php
 libraries/cms/component/helper.php X
-
 administrator/components/com_users/users.php
+
+parse stmt: 23686 485294 {892435::data=1} [] [23666, 23667] [197079, 727389, 481071, 484996, 482067, 870821]
+parse stmt: 23755 531730 {892435::data=1} [] [23666, 23667, 23686, 23700, 23716, 23731, 23750] [197079, 727389, 481071, 484996, 482067, 870821]
+
+JControllerLegacy->execute() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/users.php:21
+UsersController->display() /Applications/MAMP/htdocs/joomla/libraries/legacy/controller/legacy.php:709
+JControllerLegacy->display() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/controller.php:109
+UsersViewNotes->display() /Applications/MAMP/htdocs/joomla/libraries/legacy/controller/legacy.php:671
+JViewLegacy->get() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/views/notes/view.html.php:65
+JModelList->getItems() /Applications/MAMP/htdocs/joomla/libraries/legacy/view/legacy.php:422
+UsersModelNotes->getStoreId() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/list.php:175
+JModelLegacy->getState() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/models/notes.php:161
+usersModelNotes->populateState() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/legacy.php:434
+JModelList->getUserStateFromRequest() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/models/notes.php:214 
+JInput->get() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/list.php:691
+JModelLegacy->setState() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/models/notes.php:214
+JModelList->_getListQuery() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/list.php:186 //prepare query
+UsersModelNotes->getListQuery() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/list.php:132
+JModelLegacy->getState() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/models/notes.php:116
+JObject->get() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/legacy.php:440
+JDatabaseQuery->where() /Applications/MAMP/htdocs/joomla/administrator/components/com_users/models/notes.php:120
+JModelLegacy->_getList()//set query
+JDatabaseDriver->setQuery() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/legacy.php:305
+JDatabaseDriver->loadObjectList() /Applications/MAMP/htdocs/joomla/libraries/legacy/model/legacy.php:307 //execute queryJDatabaseDriverMysqli->execute() /Applications/MAMP/htdocs/joomla/libraries/joomla/database/driver.php:1681
+mysqli_query() /Applications/MAMP/htdocs/joomla/libraries/joomla/database/driver/mysqli.php:602
+
+
+
+
+
