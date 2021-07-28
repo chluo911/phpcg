@@ -42,7 +42,7 @@ public class StaticAnalysis  {
 	public static MultiHashMap<Long, Long> dstGlobal = new MultiHashMap<Long, Long>();
 	public static HashMap<Long, Node> ID2Node = new HashMap<Long, Node>();
 	public static MultiHashMap<Long, Long> dstProp = new MultiHashMap<Long, Long>();
-	public static Node root = new Node((long) 0, (long) 0, new HashMap<String, Long>(), new HashSet<Long>(), new Stack<Long>());
+	public static Node root = new Node((long) 0, new HashMap<String, Long>(), new HashSet<Long>(), new Stack<Long>());
 	public static HashSet<Long> vulStmts = new HashSet<Long>();
 	public static Set<Stack<Long>> vulPaths = new HashSet<Stack<Long>>();
 	public static Long ID = null;
@@ -53,26 +53,29 @@ public class StaticAnalysis  {
 	public static MultiHashMap<Long, Long> callee2caller = new MultiHashMap<Long, Long>();
 	public static HashSet<Long> validFunc = new HashSet<Long>();
 	public static MultiHashMap<Node, Node> afterCaller = new MultiHashMap<Node, Node>();
+	public static HashMap<Long, Integer> Edgetimes = new HashMap<Long, Integer>();
+	public static HashMap<Long, Integer> Edgesize = new HashMap<Long, Integer>();
 	
 	
 	public StaticAnalysis() {
 		init();
-		for(Long source: sources) {
+		for(Long entry: PHPCGFactory.topFunIds) {
 			ID2Node = new HashMap<Long, Node>();
-			if(!isSource(source)) {
-				continue;
-			}
 			//the source can only be in the main application
-			if(PHPCGFactory.getDir(source).contains("vendor") ||
-					PHPCGFactory.getDir(source).contains("Test")) {
+			if(PHPCGFactory.getDir(entry).contains("vendor") ||
+					PHPCGFactory.getDir(entry).contains("Test")) {
 				continue;
 			}
-			Long stmt = getStatement(source);
+			//the file is included/required, so it is not the entry
+			if(PHPCGFactory.call2mtd.containsKey(entry)) {
+				continue;
+			}
+			Long stmt = CSVCFGExporter.cfgSave.get(entry+1).get(0);
 			Set<Long> intro = new HashSet<Long>();
 			ID = (long) 0;
 			HashMap<String, Long> inter = new HashMap<String, Long>();
 			Stack<Long> callStack = new Stack<Long>();
-			Node node = new Node(++ID, stmt, inter, intro, callStack);
+			Node node = new Node(stmt, inter, intro, callStack);
 			constructTaintTree(node);
 		}
 	}
@@ -235,6 +238,22 @@ public class StaticAnalysis  {
 		
 		System.out.println("reduced size: "+ PHPCGFactory.call2mtd.totalSize()+" "+PHPCGFactory.mtd2call.totalSize());
 		//     System.out.print("name2Func: "+name2Func.get("1602013::data"));
+		
+		for(Long key: CSVCFGExporter.cfgSave.keySet()) {
+			List<Long> vals = CSVCFGExporter.cfgSave.get(key);
+			for(Long val: vals) {
+				if(val<=key) {
+					continue;
+				}
+				if(!Edgesize.containsKey(val)) {
+					Edgesize.put(val, 1);
+				}
+				else {
+					int number = Edgesize.get(val)+1;
+					Edgesize.put(val, number);
+				}
+			}
+		}
 	}
 	
 	private void name2Func(String inter, Long func) {
@@ -336,8 +355,8 @@ public class StaticAnalysis  {
 	}
 
 	private void constructTaintTree(Node node) {
-		traverse(node, true, new LinkedList<Long>());
-		getVulnerablePath();
+		traverse(node);
+		//getVulnerablePath();
 	}
 
 	private void getVulnerablePath() {
@@ -370,12 +389,34 @@ public class StaticAnalysis  {
 		vulPath.pop();
 	}
 
+	private void mergeNode(Long stmt, Set<Long> intra, HashMap<String, Long> inter, Stack<Long> stack) {
+		if(ID2Node.containsKey(stmt)) {
+			//merge the intra- and inter- tainted variables
+			Node node = ID2Node.get(stmt);
+			node.intro.addAll(intra);
+			for(String key: inter.keySet()) {
+				node.inter.put(key, inter.get(key));
+			}
+		}
+		else {
+			Node node = new Node(stmt, inter, intra, stack);
+		}
+		
+		if(!Edgetimes.containsKey(stmt)) {
+			Edgetimes.put(stmt, 1);
+		}
+		else {
+			int number = Edgetimes.get(stmt)+1;
+			Edgetimes.put(stmt, number);
+		}
+	}
+	
 	//traverse the node's statement
 	//@param: one taint node, a boolean value indicating if the current statement is initial source
 	//@output: get taint status of this statement, add it to taint tree is it is tainted, and find the next statement ID 
-	private boolean traverse(Node node, boolean start, LinkedList<Long> back) {
+	private boolean traverse(Node node) {
 		
-		System.out.println("parse stmt: "+node.nodeId+" "+node.astId+" "+node.inter+" "+node.intro+" "+node.caller+" "+back);
+		System.out.println("parse stmt: "+" "+node.astId+" "+node.inter+" "+node.intro+" "+node.caller);
 		//System.out.println("parse stmt: "+node.nodeId+" "+node.astId);
 		Long stmt = node.astId;
 		if(stmt==null) {
@@ -390,45 +431,13 @@ public class StaticAnalysis  {
 			//the function exits here
 			//check if the statement has been sanitized
 			boolean valid = isvalid(stmt);
-			Long topCaller, callerStmt=Long.MAX_VALUE;
-			Node callNode = null;
+			Long topCaller;
 			if(node.caller==null || node.caller.isEmpty()) {
 				topCaller = (long) 0;
 			}
 			else {
 				topCaller = node.caller.peek();
-				callNode=ID2Node.get(topCaller);
-				callerStmt=ID2Node.get(topCaller).astId;
-				//fetch the next stmt
-				if(CSVCFGExporter.cfgSave.containsKey(callerStmt)) {
-					for(Long candidate: CSVCFGExporter.cfgSave.get(callerStmt)) {
-						if(candidate>callerStmt) {
-							callerStmt=candidate;
-							break;
-						}
-					}
-				}
-				//we do not find the next stmt of caller stmt
-				if(callerStmt.equals(ID2Node.get(topCaller).astId)) {
-					callerStmt=Long.MAX_VALUE;
-				}
 			}
-			
-			//if it is the source stmt and the previous taint state contains no taint variable, then we return to its caller's next statement
-			if(start==false && node.inter.isEmpty() && node.intro.isEmpty()) {
-				if(node.caller!=null && !node.caller.isEmpty()) {
-					//because the function does not return, we think the caller has no relationship with taint, we also update the caller
-					Stack<Long> stack =(Stack<Long>) node.caller.clone();
-					stack.pop();
-					Node nextNode = new Node(++ID, callerStmt, node.inter, callNode.intro, stack);
-					traverse(nextNode, false, back);
-					return false;
-				}
-				else {
-					return false;
-				}
-			}
-			
 			
 			//check if the statement has data flow relationship with taint variables
 			HashMap<Long, Long> related = isrelated(stmt, node.intro, node.inter, topCaller);
@@ -452,89 +461,58 @@ public class StaticAnalysis  {
 					newInter = node.inter;
 				}
 				//iterate the next statement
-				while(CSVCFGExporter.cfgSave.containsKey(stmt)) {
-					Long next = CSVCFGExporter.cfgSave.get(stmt).get(0);
-					Set<Long> intro=node.intro;
+				//only one subsequent node, just traverse
+				for(int i=0; i<CSVCFGExporter.cfgSave.get(stmt).size(); i++) {
+					Long next = CSVCFGExporter.cfgSave.get(stmt).get(i);
+					Set<Long> intra=node.intro;
 					Stack<Long> stack =(Stack<Long>) node.caller.clone();
-					//we do not backwardly analyze, unless it is an exit node 
-					if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-						if(CSVCFGExporter.cfgSave.get(stmt).size()>1) {
-							Long tmp = CSVCFGExporter.cfgSave.get(stmt).get(1);
-							if(tmp>stmt) {
-								next=tmp;
-							}
-							else {
-								break;
-							}
-						}
-						else {
-							break;
-						}
+					//update context
+					mergeNode(next, intra, newInter, stack);
+					//merge completed and traverse the next statement
+					if(Edgetimes.get(next)==Edgesize.get(next)) {
+						traverse(ID2Node.get(stmt));
 					}
-					nextNode=new Node(++ID, next, newInter, intro, stack);
-					Long caller=(long) 0;
-					if(!stack.isEmpty()) {
-						caller=stack.peek();
-					}
-					//we only iterate the next related statement, unless the next stmt is exit node,
-					if((isvalid(next)&&isUsed(next, nextNode, caller))|| !CSVCFGExporter.cfgSave.containsKey(next)) {
-						traverse(nextNode, false, back);
-						break;
-					}
-					else {
-						stmt=next;
+					//loop back
+					else if(Edgetimes.get(next)>Edgesize.get(next)) {
+						Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+						mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
+						traverse(ID2Node.get(nextnext));
 					}
 				}
 			}
 			//the statement is not sanitized
 			else{
-				//this stmt is source statement, so it is related to the source
-				if(start==true) {
+				//this stmt is source statement, we add taint variables
+				if(isSource(stmt)) {
 					//node.intro.add(node.astId);
 					Set<Long> newIntro = new HashSet<Long>(node.intro);
 					Node newNode = addInter(node);
 					if(newNode.inter.equals(node.inter)) {
-						newIntro.add(node.nodeId);
+						newIntro.add(node.astId);
 					}
 					addNode(root, node);
-					while(CSVCFGExporter.cfgSave.containsKey(stmt)) {
-						Long next = CSVCFGExporter.cfgSave.get(stmt).get(0);
-						Set<Long> intro=node.intro;
+					for(int i=0; i<CSVCFGExporter.cfgSave.get(stmt).size(); i++) {
+						Long next = CSVCFGExporter.cfgSave.get(stmt).get(i);
+						Set<Long> intra=newIntro;
 						Stack<Long> stack =(Stack<Long>) node.caller.clone();
-						//we do not backwardly analyze, unless it is an exit node 
-						if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-							if(CSVCFGExporter.cfgSave.get(stmt).size()>1) {
-								Long tmp = CSVCFGExporter.cfgSave.get(stmt).get(1);
-								if(tmp>stmt) {
-									next=tmp;
-								}
-								else {
-									break;
-								}
-							}
-							else {
-								break;
-							}
+						//update context
+						mergeNode(next, intra, newNode.inter, stack);
+						//merge completed and traverse the next statement
+						if(Edgetimes.get(next)==Edgesize.get(next)) {
+							traverse(ID2Node.get(stmt));
 						}
-						Node nextNode = new Node(++ID, next, newNode.inter, intro, stack);
-						Long caller=(long) 0;
-						if(!stack.isEmpty()) {
-							caller=stack.peek();
-						}
-						//we only iterate the next related statement, unless the next stmt is exit node,  
-						if((isvalid(next)&&isUsed(next, nextNode, caller))|| !CSVCFGExporter.cfgSave.containsKey(next)) {
-							traverse(nextNode, false, back);
-							break;
-						}
-						else {
-							stmt=next;
+						//loop back
+						else if(Edgetimes.get(next)>Edgesize.get(next)) {
+							Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+							mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
+							traverse(ID2Node.get(nextnext));
 						}
 					}
 				}
 				else{
 					//if it reaches sink without sanitization, we save the vulnerable path and return.
 					if(!related.isEmpty() && sinks.contains(stmt)) {
-						vulStmts.add(node.nodeId);
+						vulStmts.add(node.astId);
 						//link the callee stmts related to return value to the caller
 						for(Long taint: related.keySet()) {
 							Long source = related.get(taint);
@@ -549,7 +527,7 @@ public class StaticAnalysis  {
 					//save the caller of the target function
 					//this statement is a function call
 					if(stmtNode instanceof CallExpressionBase || stmtNode instanceof IncludeOrEvalExpression) {
-						Long caller = node.nodeId;
+						Long caller = node.astId;
 						Stack<Long> callStack = (Stack<Long>) node.caller.clone();
 						callStack.push(caller);
 						ArgumentList args = null;
@@ -561,43 +539,25 @@ public class StaticAnalysis  {
 						//from argument to the related stmt in caller function
 						//built-in function
 						if(targetFuncs==null || targetFuncs.isEmpty()){
-							while(CSVCFGExporter.cfgSave.containsKey(stmt)) {
-								Long next = CSVCFGExporter.cfgSave.get(stmt).get(0);
-								Set<Long> intro=node.intro;
+							for(int i=0; i<CSVCFGExporter.cfgSave.get(stmt).size(); i++) {
+								Long next = CSVCFGExporter.cfgSave.get(stmt).get(i);
+								Set<Long> intra=node.intro;
 								Stack<Long> stack =(Stack<Long>) node.caller.clone();
-								//we do not backwardly analyze, unless it is an exit node 
-								if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-									if(CSVCFGExporter.cfgSave.get(stmt).size()>1) {
-										Long tmp = CSVCFGExporter.cfgSave.get(stmt).get(1);
-										if(tmp>stmt) {
-											next=tmp;
-										}
-										else {
-											break;
-										}
-									}
-									//we donot analyze the node we have analyzed
-									else {
-										break;
-									}
+								//update context
+								mergeNode(next, intra, node.inter, stack);
+								//merge completed and traverse the next statement
+								if(Edgetimes.get(next)==Edgesize.get(next)) {
+									traverse(ID2Node.get(stmt));
 								}
-								Node nextNode = new Node(++ID, next, node.inter, intro, stack);
-								Long call=(long) 0;
-								if(!stack.isEmpty()) {
-									call=stack.peek();
-								}
-								//we only iterate the next related statement, unless the next stmt is exit node,  
-								if((isvalid(next)&&isUsed(next, nextNode, call))|| !CSVCFGExporter.cfgSave.containsKey(next)) {
-									traverse(nextNode, false, back);
-									break;
-								}
-								else {
-									stmt=next;
+								//loop back
+								else if(Edgetimes.get(next)>Edgesize.get(next)) {
+									Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+									mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
+									traverse(ID2Node.get(nextnext));
 								}
 							}
-							return false;
 						}
-						
+						xxx
 						//first check if we have analyzed this call site, if it is, we get the taint status from function summary.
 						for(Node call: afterCaller.keySet()) {
 							ASTNode callerNode = ASTUnderConstruction.idToNode.get(call.astId);
@@ -764,7 +724,7 @@ public class StaticAnalysis  {
 								else {
 									while(CSVCFGExporter.cfgSave.containsKey(stmt)) {
 										Long next = CSVCFGExporter.cfgSave.get(stmt).get(0);
-										System.out.println("next1: "+next);
+										//System.out.println("next1: "+next);
 										Set<Long> save=node.intro;
 										Stack<Long> stack =(Stack<Long>) node.caller.clone();
 										//we do not backwardly analyze, unless it is an exit node 
@@ -1326,10 +1286,16 @@ public class StaticAnalysis  {
 											//exit node ID
 											next = funcId+2;
 											Node nextNode = new Node(++ID, next, newInter, intro, stack);
+											traverse(nextNode, false, back);
 											break;
 										}
 									}
 									else {
+										Long funcId = ASTUnderConstruction.idToNode.get(stmtId).getFuncId();
+										//exit node ID
+										next = funcId+2;
+										Node nextNode = new Node(++ID, next, newInter, intro, stack);
+										traverse(nextNode, false, back);
 										break;
 									}
 								}
@@ -1549,7 +1515,7 @@ public class StaticAnalysis  {
 			for(Long dst: dstExps) {
 				ASTNode dstNode = ASTUnderConstruction.idToNode.get(dst);
 				String identity = getPropIdentity(dstNode, caller);
-				newInter.put(identity, node.nodeId);
+				newInter.put(identity, node.astId);
 			}
 		}
 		//the statement contains a dst Global variable
@@ -1558,7 +1524,7 @@ public class StaticAnalysis  {
 			for(Long dst: dstExps) {
 				ASTNode dstNode = ASTUnderConstruction.idToNode.get(dst);
 				String identity = getDIMIdentity(dstNode);
-				newInter.put(identity, node.nodeId);
+				newInter.put(identity, node.astId);
 			}
 		}
 		ret.inter=newInter;

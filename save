@@ -41,5 +41,5 @@ mysqli_query() /Applications/MAMP/htdocs/joomla/libraries/joomla/database/driver
 
 
 
-
+parse stmt: 25494 588186 {892435::data=1} [] [25174, 25175, 25452, 25486] [197079, 727389, 481071, 484996, 482067, 870821]
 
