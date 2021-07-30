@@ -470,7 +470,7 @@ public class StaticAnalysis  {
 					mergeNode(next, intra, newInter, stack);
 					//merge completed and traverse the next statement
 					if(Edgetimes.get(next)==Edgesize.get(next)) {
-						traverse(ID2Node.get(stmt));
+						traverse(ID2Node.get(next));
 					}
 					//loop back
 					else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -499,7 +499,7 @@ public class StaticAnalysis  {
 						mergeNode(next, intra, newNode.inter, stack);
 						//merge completed and traverse the next statement
 						if(Edgetimes.get(next)==Edgesize.get(next)) {
-							traverse(ID2Node.get(stmt));
+							traverse(ID2Node.get(next));
 						}
 						//loop back
 						else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -547,7 +547,7 @@ public class StaticAnalysis  {
 								mergeNode(next, intra, node.inter, stack);
 								//merge completed and traverse the next statement
 								if(Edgetimes.get(next)==Edgesize.get(next)) {
-									traverse(ID2Node.get(stmt));
+									traverse(ID2Node.get(next));
 								}
 								//loop back
 								else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -590,7 +590,7 @@ public class StaticAnalysis  {
 									mergeNode(next, intra, node.inter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										traverse(ID2Node.get(stmt));
+										traverse(ID2Node.get(next));
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -601,7 +601,6 @@ public class StaticAnalysis  {
 								}
 							}
 							
-							//step into this function
 							FunctionDef funcNode = (FunctionDef) ASTUnderConstruction.idToNode.get(func);
 							//if it is an empty function, we reach the ret node
 							if(funcNode.getContent()==null || funcNode.getContent().size()==0) {
@@ -613,7 +612,7 @@ public class StaticAnalysis  {
 									mergeNode(next, intra, node.inter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										traverse(ID2Node.get(stmt));
+										traverse(ID2Node.get(next));
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -670,7 +669,7 @@ public class StaticAnalysis  {
 							if(intro.isEmpty()) {
 								boolean flag = false;
 								for(String inter: node.inter.keySet()) {
-									//the inter variables are used in the function
+									//the inter variables are used in the function or not
 									for(String key: name2Func.keySet()) {
 										//find the key
 										if(key.equals(inter) || check(inter, key)==true) {
@@ -681,7 +680,7 @@ public class StaticAnalysis  {
 										}
 									}
 								}
-								//the function is related
+								//the function is related, we step into it
 								if(flag==true) {
 									Long nextstmtId = CSVCFGExporter.cfgSave.get(funcNode.getNodeId()+1).get(0);
 									ASTNode nextstmt = ASTUnderConstruction.idToNode.get(nextstmtId);
@@ -699,7 +698,7 @@ public class StaticAnalysis  {
 										mergeNode(next, intra, node.inter, stack);
 										//merge completed and traverse the next statement
 										if(Edgetimes.get(next)==Edgesize.get(next)) {
-											traverse(ID2Node.get(stmt));
+											traverse(ID2Node.get(next));
 										}
 										//loop back
 										else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -740,6 +739,7 @@ public class StaticAnalysis  {
 						HashMap<Long, Long> param2caller = new HashMap<Long, Long>();
 						//it is built-in function
 						if(targetFuncs==null || targetFuncs.isEmpty()) {
+							//remove tainted variables
 							if(related.keySet().isEmpty()) {
 								Set<String> unrelated = RemoveInterTaint(stmt, caller, node.inter);
 								HashMap<String, Long> newInter = null;
@@ -766,7 +766,7 @@ public class StaticAnalysis  {
 									mergeNode(next, intra, newInter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										traverse(ID2Node.get(stmt));
+										traverse(ID2Node.get(next));
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -777,7 +777,7 @@ public class StaticAnalysis  {
 								}
 								return false;
 							}
-							//the statement is related
+							//the tainted variables are used as source in built-in function, we think the destination will also be tainted
 							else {
 								//update context
 								Set<Long> save = new HashSet<Long>(node.intro);
@@ -798,10 +798,10 @@ public class StaticAnalysis  {
 									Set<Long> intra=node.intro;
 									Stack<Long> stack =(Stack<Long>) node.caller.clone();
 									//update context
-									mergeNode(next, save, tmp.inter, stack);
+									mergeNode(next, save1, tmp.inter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										traverse(ID2Node.get(stmt));
+										traverse(ID2Node.get(next));
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -846,7 +846,7 @@ public class StaticAnalysis  {
 									mergeNode(next, intra, node.inter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										traverse(ID2Node.get(stmt));
+										traverse(ID2Node.get(next));
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -884,7 +884,7 @@ public class StaticAnalysis  {
 									mergeNode(next, intra, node.inter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										traverse(ID2Node.get(stmt));
+										traverse(ID2Node.get(next));
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -938,6 +938,7 @@ public class StaticAnalysis  {
 									Node nextNode = new Node(nextId, node.inter, intro, callStack);
 									traverse(nextNode);
 								}
+								//the function is not related, we traverse the next statement of caller
 								else {
 									for(int i=0; i<CSVCFGExporter.cfgSave.get(stmt).size(); i++) {
 										Long next = CSVCFGExporter.cfgSave.get(stmt).get(i);
@@ -947,7 +948,7 @@ public class StaticAnalysis  {
 										mergeNode(next, intra, node.inter, stack);
 										//merge completed and traverse the next statement
 										if(Edgetimes.get(next)==Edgesize.get(next)) {
-											traverse(ID2Node.get(stmt));
+											traverse(ID2Node.get(next));
 										}
 										//loop back
 										else if(Edgetimes.get(next)>Edgesize.get(next)) {
@@ -959,6 +960,7 @@ public class StaticAnalysis  {
 									return false;
 								}
 							}
+							//the parameters are tainted
 							else {
 								Node nextNode = null;
 								Set<Long> newIntro = new HashSet<Long>();
@@ -976,47 +978,11 @@ public class StaticAnalysis  {
 					}
 					//the statement is a return statement
 					else if(stmtNode instanceof ReturnStatement) {
-						//we don't know the caller, return to exit Node
-						if(node.caller.isEmpty()) {
-							while(CSVCFGExporter.cfgSave.containsKey(stmt)) {
-								Long next = CSVCFGExporter.cfgSave.get(stmt).get(0);
-								Set<Long> save=node.intro;
-								Stack<Long> stack =(Stack<Long>) node.caller.clone();
-								//we do not backwardly analyze, unless it is an exit node 
-								if(next<=stmt && CSVCFGExporter.cfgSave.containsKey(next)) {
-									if(CSVCFGExporter.cfgSave.get(stmt).size()>1) {
-										Long tmp = CSVCFGExporter.cfgSave.get(stmt).get(1);
-										if(tmp>stmt) {
-											next=tmp;
-										}
-										else {
-											break;
-										}
-									}
-									else {
-										break;
-									}
-								}
-								Node nextNode = new Node(++ID, next, node.inter, save, stack);
-								Long call=(long) 0;
-								if(!stack.isEmpty()) {
-									call=stack.peek();
-								}
-								//we only iterate the next related statement, unless the next stmt is exit node,  
-								if((isvalid(next)&&isUsed(next, nextNode, call))|| !CSVCFGExporter.cfgSave.containsKey(next)) {
-									traverse(nextNode, f);
-									break;
-								}
-								else {
-									stmt=next;
-								}
-							}
-							return false;
-						}
+						
 						Long caller = node.caller.peek();
 						Node callerNode = ID2Node.get(caller);
 						Long callerID = callerNode.astId;
-						//next stmt is next statement of the caller
+						//next statement of the caller
 						List<Long> nextStmts = CSVCFGExporter.cfgSave.get(callerID);
 						//if the return value is tainted, then the caller should be tainted
 						if(!related.keySet().isEmpty()) {
@@ -1033,41 +999,25 @@ public class StaticAnalysis  {
 								Node preNode = ID2Node.get(source);
 								addNode(preNode, callerNode);
 							}
-							//iterate next statement
-							for(Long next: nextStmts) {
-								save=save1;
-								if(next<=callerID && CSVCFGExporter.cfgSave.containsKey(next)) {
-									if(CSVCFGExporter.cfgSave.get(callerID).size()>1) {
-										Long tmp1 = CSVCFGExporter.cfgSave.get(callerID).get(1);
-										if(tmp1>callerID) {
-											next=tmp1;
-										}
-										else {
-											continue;
-										}
-									}
-									else {
-										continue;
-									}
+							//go to the the exit node
+							for(int i=0; i<CSVCFGExporter.cfgSave.get(stmt).size(); i++) {
+								Long next = CSVCFGExporter.cfgSave.get(stmt).get(i);
+								Set<Long> intra=node.intro;
+								Stack<Long> stack =(Stack<Long>) node.caller.clone();
+								//update context
+								mergeNode(next, intra, node.inter, stack);
+								//merge completed and traverse the next statement
+								if(Edgetimes.get(next)==Edgesize.get(next)) {
+									traverse(ID2Node.get(next));
 								}
-								Node nextNode = new Node(++ID, next, tmp.inter, save, callerNode.caller);
-								//delete duplicate
-								boolean flag=false;
-								if(afterCaller.containsKey(callerNode)) {
-									List<Node> afters = afterCaller.get(callerNode);
-									for(Node after: afters) {
-										//the two returns have the same context
-										if(after.inter.equals(nextNode.inter) && after.intro.equals(nextNode.intro)) {
-											flag=true;
-										}
-									}
+								//loop back
+								else if(Edgetimes.get(next)>Edgesize.get(next)) {
+									Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+									mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
+									traverse(ID2Node.get(nextnext));
 								}
-								if(flag==false) {
-									afterCaller.add(callerNode, nextNode);
-								}
-								traverse(nextNode, false, back);
-								break;
 							}
+							return false;
 						}
 						//the return value is not tainted
 						else {
