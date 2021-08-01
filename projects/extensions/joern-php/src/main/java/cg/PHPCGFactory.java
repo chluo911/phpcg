@@ -140,6 +140,7 @@ public class PHPCGFactory {
 	//public static HashMap<Long, String> caller2path = new HashMap<Long, String>();
 	public static HashSet<String> bwlines = new HashSet<String>();
 	public static MultiHashMap<String, Long> path2callee = new MultiHashMap<String, Long>();
+	public static HashSet<String> entrypoint = new HashSet<String>();
 	
 	//public static Set<FunctionDef> constructSet = new HashSet<FunctionDef>();
 	/**
@@ -198,6 +199,11 @@ public class PHPCGFactory {
 		    	    	   target = target.replace("/var/www/html/", "/home/users/chluo/goal/");
 		    	    	   target = target.replace("()", "");
 		    	    	   String path = words[5].replace("/var/www/html/", "/home/users/chluo/goal/");
+		    	    	   //main functon
+		    	    	   if(target.equals("{main}()")) {
+		    	    		   String entry = path.substring(0, path.indexOf(":"));
+		    	    		   entrypoint.add(entry);
+		    	    	   }
 		    	    	   //require or include
 		    	    	   if(target.startsWith("include(") || target.startsWith("require(") ||
 		    	    			   target.startsWith("require_once(") || target.startsWith("include_once(")) {
@@ -1479,9 +1485,7 @@ public class PHPCGFactory {
 		allFuncDef.add(functionDef.getNodeId());
 		// artificial toplevel functions wrapping toplevel code cannot be called
 		if( functionDef instanceof TopLevelFunctionDef) {
-			if(functionDef.getFlags().equals("TOPLEVEL_FILE")) {
-				topFunIds.add(functionDef.getNodeId());
-			}
+			topFunIds.add(functionDef.getNodeId());
 			String path = getDir(functionDef.getNodeId());
 			topLevelFunctionDefs.put(path, functionDef.getNodeId());
 			return null;
