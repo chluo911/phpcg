@@ -56,6 +56,7 @@ public class StaticAnalysis  {
 	public static HashMap<Long, Integer> Edgetimes = new HashMap<Long, Integer>();
 	public static HashMap<Long, Integer> Edgesize = new HashMap<Long, Integer>();
 	public static HashSet<Long> sourceFunc = new HashSet<Long>(); 
+	public static MultiHashMap<Long, Long> clean = new MultiHashMap<Long, Long>();
 	
 	public StaticAnalysis() {
 		init();
@@ -201,19 +202,19 @@ public class StaticAnalysis  {
 			String iden = getDIMIdentity(srcNode);
 			name2Stmt.add(iden, src);
 		}
-		System.out.println("original size: "+ PHPCGFactory.call2mtd.totalSize()+" "+PHPCGFactory.mtd2call.totalSize());
-		
-		System.out.println("reduced size: "+ PHPCGFactory.call2mtd.totalSize()+" "+PHPCGFactory.mtd2call.totalSize());
-		//     System.out.print("name2Func: "+name2Func.get("1602013::data"));
 		
 		for(Long key: CSVCFGExporter.cfgSave.keySet()) {
 			List<Long> vals = CSVCFGExporter.cfgSave.get(key);
+			int w = 1;
+			if(PHPCGFactory.call2mtd.containsKey(key)) {
+				w = PHPCGFactory.call2mtd.get(key).size();
+			}
 			for(Long val: vals) {
 				if(!Edgesize.containsKey(val)) {
-					Edgesize.put(val, 1);
+					Edgesize.put(val, w);
 				}
 				else {
-					int number = Edgesize.get(val)+1;
+					int number = Edgesize.get(val)+w;
 					Edgesize.put(val, number);
 				}
 			}
@@ -388,13 +389,25 @@ public class StaticAnalysis  {
 			Edgetimes.put(stmt, number);
 		}
 		
+		if(ASTUnderConstruction.idToNode.containsKey(stmt)) {
+			Long funcID = ASTUnderConstruction.idToNode.get(stmt).getFuncId();
+			Long exit = funcID+2;
+			clean.add(exit, stmt);
+		}
+		//it is file-exit node
+		else {
+			clean.add(stmt, stmt);
+		}
+		
 		return node;
 	}
 	
 	private void clean(Node node) {
-		node.inter.clear();
-		node.intro.clear();
-		node.caller.clear();
+		node.inter = new HashMap<String, Long>();
+		node.intro = new HashSet<Long>();
+		node.caller = new Stack<Long>();
+		
+		Edgetimes.put(node.astId, 0);
 	}
 	
 	//traverse the node's statement
@@ -456,15 +469,15 @@ public class StaticAnalysis  {
 					nextNode = mergeNode(next, intra, newInter, stack);
 					//merge completed and traverse the next statement
 					if(Edgetimes.get(next)==Edgesize.get(next)) {
-						clean(node);
+						//clean(node);
 						traverse(nextNode);
 					}
 					//loop back
 					else if(Edgetimes.get(next)>Edgesize.get(next)) {
 						Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 						nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-						clean(node);
-						traverse(ID2Node.get(nextNode));
+						//clean(node);
+						traverse(nextNode);
 					}
 				}
 			}
@@ -488,14 +501,14 @@ public class StaticAnalysis  {
 						nextNode = mergeNode(next, intra, inter, stack);
 						//merge completed and traverse the next statement
 						if(Edgetimes.get(next)==Edgesize.get(next)) {
-							clean(node);
+							//clean(node);
 							traverse(nextNode);
 						}
 						//loop back
 						else if(Edgetimes.get(next)>Edgesize.get(next)) {
 							Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 							nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-							clean(node);
+							//clean(node);
 							traverse(nextNode);
 						}
 					}
@@ -539,28 +552,20 @@ public class StaticAnalysis  {
 								nextNode = mergeNode(next, intra, inter, stack);
 								//merge completed and traverse the next statement
 								if(Edgetimes.get(next)==Edgesize.get(next)) {
-									clean(node);
+									//clean(node);
 									traverse(nextNode);
 								}
 								//loop back
 								else if(Edgetimes.get(next)>Edgesize.get(next)) {
 									Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 									nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-									clean(node);
+									//clean(node);
 									traverse(nextNode);
 								}
 							}
 							return false;
 						}
 						
-						//get the out edges of callsite
-						int number = PHPCGFactory.call2mtd.get(stmt).size();
-						List<Long> retIDs = CSVCFGExporter.cfgSave.get(stmt);
-						for(Long retID: retIDs) {
-							int ori = Edgesize.get(retID);
-							ori = ori-1+number;
-							Edgesize.put(retID, ori);
-						}
 						
 						for(Long func: targetFuncs) {
 							//the callee is also the caller
@@ -585,17 +590,18 @@ public class StaticAnalysis  {
 									nextNode = mergeNode(next, intra, inter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										clean(node);
+										//clean(node);
 										traverse(nextNode);
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
 										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-										clean(node);
+										//clean(node);
 										traverse(nextNode);
 									}
 								}
+								return false;
 							}
 							
 							FunctionDef funcNode = (FunctionDef) ASTUnderConstruction.idToNode.get(func);
@@ -610,14 +616,14 @@ public class StaticAnalysis  {
 									nextNode = mergeNode(next, intra, inter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										clean(node);
+										//clean(node);
 										traverse(nextNode);
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
 										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-										clean(node);
+										//clean(node);
 										traverse(nextNode);
 									}
 								}
@@ -691,14 +697,14 @@ public class StaticAnalysis  {
 										nextNode = mergeNode(next, intra, node.inter, stack);
 										//merge completed and traverse the next statement
 										if(Edgetimes.get(next)==Edgesize.get(next)) {
-											clean(node);
+											//clean(node);
 											traverse(nextNode);
 										}
 										//loop back
 										else if(Edgetimes.get(next)>Edgesize.get(next)) {
 											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-											clean(node);
+											//clean(node);
 											traverse(ID2Node.get(nextnext));
 										}
 									}
@@ -708,6 +714,7 @@ public class StaticAnalysis  {
 							//step into the function
 							else {
 								Set<Long> newIntro = new HashSet<Long>();
+								Long nextstmtId = CSVCFGExporter.cfgSave.get(funcNode.getNodeId()+1).get(0);
 								for(Long taintParam: intro) {
 									Long prev = param2caller.get(taintParam);
 									Node preNode = ID2Node.get(prev);
@@ -761,14 +768,14 @@ public class StaticAnalysis  {
 									nextNode = mergeNode(next, intra, newInter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										clean(node);
+										//clean(node);
 										traverse(nextNode);
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
 										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-										clean(node);
+										//clean(node);
 										traverse(ID2Node.get(nextnext));
 									}
 								}
@@ -798,14 +805,14 @@ public class StaticAnalysis  {
 									nextNode = mergeNode(next, save1, tmp.inter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										clean(node);
+										//clean(node);
 										traverse(nextNode);
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
 										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-										clean(node);
+										//clean(node);
 										traverse(ID2Node.get(nextnext));
 									}
 								}
@@ -816,12 +823,6 @@ public class StaticAnalysis  {
 						
 						int number = PHPCGFactory.call2mtd.get(callsite.getNodeId()).size();
 						
-						List<Long> retIDs = CSVCFGExporter.cfgSave.get(stmt);
-						for(Long retID: retIDs) {
-							int ori = Edgesize.get(retID);
-							ori = ori-1+number;
-							Edgesize.put(retID, ori);
-						}
 						
 						for(Long func: targetFuncs) {
 							boolean contains = false;
@@ -848,14 +849,14 @@ public class StaticAnalysis  {
 									nextNode = mergeNode(next, intra, inter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										clean(node);
+										//clean(node);
 										traverse(ID2Node.get(next));
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
 										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-										clean(node);
+										//clean(node);
 										traverse(ID2Node.get(nextnext));
 									}
 								}
@@ -872,14 +873,14 @@ public class StaticAnalysis  {
 									nextNode = mergeNode(next, intra, inter, stack);
 									//merge completed and traverse the next statement
 									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										clean(node);
+										//clean(node);
 										traverse(ID2Node.get(next));
 									}
 									//loop back
 									else if(Edgetimes.get(next)>Edgesize.get(next)) {
 										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 										mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-										clean(node);
+										//clean(node);
 										traverse(ID2Node.get(nextnext));
 									}
 								}
@@ -945,14 +946,14 @@ public class StaticAnalysis  {
 										nextNode = mergeNode(next, intra, inter1, stack);
 										//merge completed and traverse the next statement
 										if(Edgetimes.get(next)==Edgesize.get(next)) {
-											clean(node);
+											//clean(node);
 											traverse(ID2Node.get(next));
 										}
 										//loop back
 										else if(Edgetimes.get(next)>Edgesize.get(next)) {
 											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-											clean(node);
+											//clean(node);
 											traverse(ID2Node.get(nextnext));
 										}
 									}
@@ -1004,14 +1005,14 @@ public class StaticAnalysis  {
 								nextNode = mergeNode(next, intra, inter, stack);
 								//merge completed and traverse the next statement
 								if(Edgetimes.get(next)==Edgesize.get(next)) {
-									clean(node);
+									//clean(node);
 									traverse(ID2Node.get(next));
 								}
 								//loop back
 								else if(Edgetimes.get(next)>Edgesize.get(next)) {
 									Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 									nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-									clean(node);
+									//clean(node);
 									traverse(ID2Node.get(nextnext));
 								}
 							}
@@ -1027,14 +1028,14 @@ public class StaticAnalysis  {
 								nextNode = mergeNode(next, new HashSet<Long>(), inter, stack);
 								//merge completed and traverse the next statement
 								if(Edgetimes.get(next)==Edgesize.get(next)) {
-									clean(node);
+									//clean(node);
 									traverse(ID2Node.get(next));
 								}
 								//loop back
 								else if(Edgetimes.get(next)>Edgesize.get(next)) {
 									Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 									nextNode = mergeNode(nextnext, new HashSet<Long>(), ID2Node.get(next).inter, ID2Node.get(next).caller);
-									clean(node);
+									//clean(node);
 									traverse(ID2Node.get(nextnext));
 								}
 							}
@@ -1050,7 +1051,6 @@ public class StaticAnalysis  {
 						else {
 							caller=node.caller.peek();
 						}
-						
 						
 						if(related.keySet().isEmpty()) {
 							
@@ -1079,14 +1079,14 @@ public class StaticAnalysis  {
 								nextNode = mergeNode(next, intro, newInter, stack);
 								//merge completed and traverse the next statement
 								if(Edgetimes.get(next)==Edgesize.get(next)) {
-									clean(node);
+									//clean(node);
 									traverse(ID2Node.get(next));
 								}
 								//loop back
 								else if(Edgetimes.get(next)>Edgesize.get(next)) {
 									Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 									nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-									clean(node);
+									//clean(node);
 									traverse(ID2Node.get(nextnext));
 								}
 							}
@@ -1116,14 +1116,14 @@ public class StaticAnalysis  {
 								nextNode = mergeNode(next, save, tmp.inter, stack);
 								//merge completed and traverse the next statement
 								if(Edgetimes.get(next)==Edgesize.get(next)) {
-									clean(node);
+									//clean(node);
 									traverse(ID2Node.get(next));
 								}
 								//loop back
 								else if(Edgetimes.get(next)>Edgesize.get(next)) {
 									Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 									nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-									clean(node);
+									//clean(node);
 									traverse(ID2Node.get(nextnext));
 								}
 							}
@@ -1134,6 +1134,12 @@ public class StaticAnalysis  {
 		}
 		//AST Node FUNC_EXIT
 		else if(!node.caller.isEmpty()) {
+			
+			//throw statement, stop here. All normal statements shall exit at FUNC_EXIT
+			if(ASTUnderConstruction.idToNode.containsKey(node.astId)) {
+				return false;
+			}
+			
 			Long caller = node.caller.peek();
 			if(ID2Node.containsKey(caller)) {
 				Node callerNode = ID2Node.get(caller);
@@ -1147,21 +1153,34 @@ public class StaticAnalysis  {
 				if(!node.intro.isEmpty() && node.intro.contains((long) -1)){
 					intro.add(callerID);
 				}
-				for(int i=0; i<CSVCFGExporter.cfgSave.get(stmt).size(); i++) {
-					Long next = CSVCFGExporter.cfgSave.get(stmt).get(i);
-					Stack<Long> stack =(Stack<Long>) node.caller.clone();
+				
+				if(clean.containsKey(stmt)) {
+					for(Long intra: clean.get(stmt)) {
+						clean(ID2Node.get(intra));
+					}
+				}
+				else {
+					node.inter = new HashMap<String, Long>();
+					node.intro = new HashSet<Long>();
+					node.caller = new Stack<Long>();
+					Edgetimes.put(node.astId, 0);
+				}
+				
+				for(int i=0; i<CSVCFGExporter.cfgSave.get(callerID).size(); i++) {
+					Long next = CSVCFGExporter.cfgSave.get(callerID).get(i);
+					Stack<Long> stack = callStack;
 					//update context
 					nextNode = mergeNode(next, intro, inter, stack);
 					//merge completed and traverse the next statement
 					if(Edgetimes.get(next)==Edgesize.get(next)) {
-						clean(callerNode);
+						//clean(callerNode);
 						traverse(ID2Node.get(next));
 					}
 					//loop back
 					else if(Edgetimes.get(next)>Edgesize.get(next)) {
 						Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
 						nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-						clean(callerNode);
+						//clean(callerNode);
 						traverse(ID2Node.get(nextnext));
 					}
 				}
@@ -1607,6 +1626,7 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
 
 
