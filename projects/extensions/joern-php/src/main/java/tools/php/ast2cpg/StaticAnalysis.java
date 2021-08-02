@@ -57,6 +57,7 @@ public class StaticAnalysis  {
 	public static HashMap<Long, Integer> Edgesize = new HashMap<Long, Integer>();
 	public static HashSet<Long> sourceFunc = new HashSet<Long>(); 
 	public static MultiHashMap<Long, Long> clean = new MultiHashMap<Long, Long>();
+	public static HashSet<Long> loop = new HashSet<Long>();
 	
 	public StaticAnalysis() {
 		init();
@@ -210,18 +211,44 @@ public class StaticAnalysis  {
 				w = PHPCGFactory.call2mtd.get(key).size();
 			}
 			for(Long val: vals) {
-				if(!Edgesize.containsKey(val)) {
-					Edgesize.put(val, w);
+				//loop back
+				if(val<key && ASTUnderConstruction.idToNode.containsKey(val)) {
+					System.err.println("val: "+val);
+					loop.add(val);
+					Long next = CSVCFGExporter.cfgSave.get(val).get(1);
+					if(!Edgesize.containsKey(next)) {
+						Edgesize.put(next, w);
+					}
+					else {
+						int number = Edgesize.get(next)+w;
+						Edgesize.put(next, number);
+					}
 				}
 				else {
-					int number = Edgesize.get(val)+w;
-					Edgesize.put(val, number);
+					if(!Edgesize.containsKey(val)) {
+						Edgesize.put(val, w);
+					}
+					else {
+						int number = Edgesize.get(val)+w;
+						Edgesize.put(val, number);
+					}
 				}
 			}
 		}
 		
+		for(Long c: loop) {
+			System.err.println("loop: "+c);
+			Long next = CSVCFGExporter.cfgSave.get(c).get(1);
+			int number = Edgesize.get(next)-1;
+			Edgesize.put(next, number);
+		}
+		
 		for(Long src: sources) {
 			ASTNode srcNode = ASTUnderConstruction.idToNode.get(src);
+			String dir = PHPCGFactory.getDir(srcNode.getNodeId());
+			if(dir.contains("test") || dir.contains("Test")) {
+				continue;
+			}
 			sourceFunc(srcNode.getFuncId());
 		}
 	}
@@ -398,6 +425,8 @@ public class StaticAnalysis  {
 		else {
 			clean.add(stmt, stmt);
 		}
+		
+		System.out.println(stmt+": times: "+Edgetimes.get(stmt)+"size: "+Edgesize.get(stmt));
 		
 		return node;
 	}
@@ -601,7 +630,7 @@ public class StaticAnalysis  {
 										traverse(nextNode);
 									}
 								}
-								return false;
+								continue;
 							}
 							
 							FunctionDef funcNode = (FunctionDef) ASTUnderConstruction.idToNode.get(func);
@@ -627,7 +656,7 @@ public class StaticAnalysis  {
 										traverse(nextNode);
 									}
 								}
-								return false;
+								continue;
 							}
 							
 							Long funcID = ASTUnderConstruction.idToNode.get(stmt).getFuncId();
@@ -674,6 +703,7 @@ public class StaticAnalysis  {
 								}
 								//the function defines source
 								if(sourceFunc.contains(func)) {
+									System.out.println("define source: "+func);
 									flag=true;
 								}
 								
@@ -682,6 +712,7 @@ public class StaticAnalysis  {
 								
 								//the function is related, we step into it
 								if(flag==true) {
+									System.out.println("step into : "+func);
 									Long nextstmtId = CSVCFGExporter.cfgSave.get(funcNode.getNodeId()+1).get(0);
 									ASTNode nextstmt = ASTUnderConstruction.idToNode.get(nextstmtId);
 									nextId = nextstmt.getNodeId();
@@ -708,7 +739,7 @@ public class StaticAnalysis  {
 											traverse(ID2Node.get(nextnext));
 										}
 									}
-									return false;
+									continue;
 								}
 							}
 							//step into the function
@@ -860,7 +891,7 @@ public class StaticAnalysis  {
 										traverse(ID2Node.get(nextnext));
 									}
 								}
-								return false;
+								continue;
 							}
 							
 							FunctionDef funcNode = (FunctionDef) ASTUnderConstruction.idToNode.get(func);
@@ -884,7 +915,7 @@ public class StaticAnalysis  {
 										traverse(ID2Node.get(nextnext));
 									}
 								}
-								return false;
+								continue;
 							}
 							
 							//check weather params are tainted
@@ -925,11 +956,13 @@ public class StaticAnalysis  {
 								}
 								//the function defines source
 								if(sourceFunc.contains(func)) {
+									System.out.println("define source: "+func);
 									flag=true;
 								}
 								
 								//the function is related, step into it
 								if(flag==true) {
+									System.out.println("step into : "+func);
 									Long nextstmtId = CSVCFGExporter.cfgSave.get(funcNode.getNodeId()+1).get(0);
 									ASTNode nextstmt = ASTUnderConstruction.idToNode.get(nextstmtId);
 									nextId = nextstmt.getNodeId();
@@ -957,7 +990,7 @@ public class StaticAnalysis  {
 											traverse(ID2Node.get(nextnext));
 										}
 									}
-									return false;
+									continue;
 								}
 							}
 							//the parameters are tainted, step into it
@@ -1626,6 +1659,7 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
 
 
