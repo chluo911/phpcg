@@ -1373,8 +1373,8 @@ public class PHPCGFactory {
 		
 		lock.lock();
 		try {
-			CGNode caller = new CGNode(functionCall);
-			CGNode callee = new CGNode(functionDef);
+			//CGNode caller = new CGNode(functionCall);
+			//CGNode callee = new CGNode(functionDef);
 			//the caller cannot call it self
 			if(functionCall.getFuncId().equals(functionDef.getNodeId())) {
 				return true;
@@ -1441,7 +1441,7 @@ public class PHPCGFactory {
 			}
 		}
 		
-		System.out.println("Maximum: "+i1+" "+i2);
+		System.err.println("Maximum: "+i1+" "+i2);
 		
 		functionDefs.clear();
 		functionCalls.clear();
@@ -1704,6 +1704,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 
