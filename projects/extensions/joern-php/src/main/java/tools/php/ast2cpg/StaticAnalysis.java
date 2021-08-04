@@ -206,7 +206,22 @@ public class StaticAnalysis  {
 			name2Stmt.add(iden, src);
 		}
 		
+		//get all destination stmts
+		Set<Long> value = new HashSet<Long>();
 		for(Long key: CSVCFGExporter.cfgSave.keySet()) {
+			List<Long> vals = CSVCFGExporter.cfgSave.get(key);
+			for(Long val: vals) {
+				value.add(val);
+			}
+		}
+		
+		for(Long key: CSVCFGExporter.cfgSave.keySet()) {
+			//catch stmt: the stmt is never reached and it is not the entry point stmt
+			if(!value.contains(key) && ASTUnderConstruction.idToNode.containsKey(key)) {
+				System.out.println("catch: "+key);
+				continue;
+			}
+			
 			List<Long> vals = CSVCFGExporter.cfgSave.get(key);
 			int w = 1;
 			ASTNode stmtNode = ASTUnderConstruction.idToNode.get(key);
@@ -224,16 +239,22 @@ public class StaticAnalysis  {
 				//loop back
 				if(val<key && ASTUnderConstruction.idToNode.containsKey(val)) {
 					if(CSVCFGExporter.cfgSave.get(val).size()<2) {
+						Edgesize.put(val, 0);
 						continue;
 					}
 					//System.err.println("val: "+val);
 					loop.add(val);
 					Long next = CSVCFGExporter.cfgSave.get(val).get(1);
+					while(loop.contains(next)) {
+						next = CSVCFGExporter.cfgSave.get(next).get(1);
+					}
 					if(!Edgesize.containsKey(next)) {
+						System.out.println("edgesize: "+next+" "+w+" "+key);
 						Edgesize.put(next, w);
 					}
 					else {
 						int number = Edgesize.get(next)+w;
+						System.out.println("edgesize: "+next+" "+number+" "+key);
 						Edgesize.put(next, number);
 					}
 				}
@@ -249,15 +270,6 @@ public class StaticAnalysis  {
 			}
 		}
 		
-		for(Long c: loop) {
-			//System.err.println("loop: "+c);
-			if(CSVCFGExporter.cfgSave.get(c).size()<2) {
-				continue;
-			}
-			Long next = CSVCFGExporter.cfgSave.get(c).get(1);
-			int number = Edgesize.get(next)-1;
-			Edgesize.put(next, number);
-		}
 		
 		for(Long src: sources) {
 			ASTNode srcNode = ASTUnderConstruction.idToNode.get(src);
@@ -271,7 +283,7 @@ public class StaticAnalysis  {
 			}
 		}
 		
-		System.out.println("srcStnt: "+srcStmt);
+		//System.out.println("srcStnt: "+srcStmt);
 	}
 	
 	private void sourceFunc(Long funcId) {
@@ -523,9 +535,12 @@ public class StaticAnalysis  {
 						traverse(nextNode);
 					}
 					//loop back
-					else if(Edgetimes.get(next)>Edgesize.get(next)) {
+					else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 						if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 							Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+							while(loop.contains(nextnext)) {
+								nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+							}
 							nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 							//clean(node);
 							if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -542,6 +557,7 @@ public class StaticAnalysis  {
 			else{
 				//this stmt is source statement, we add taint variables
 				if(srcStmt.contains(stmt)) {
+					System.out.println("source stmt: "+stmt);
 					//node.intro.add(node.astId);
 					Set<Long> intra=node.intro;
 					HashMap<String, Long> inter = node.inter;
@@ -555,16 +571,19 @@ public class StaticAnalysis  {
 						Long next = CSVCFGExporter.cfgSave.get(stmt).get(i);
 						Stack<Long> stack =(Stack<Long>) node.caller.clone();
 						//update context
-						nextNode = mergeNode(next, intra, inter, stack);
+						nextNode = mergeNode(next, intra, newNode.inter, stack);
 						//merge completed and traverse the next statement
 						if(Edgetimes.get(next)==Edgesize.get(next)) {
 							//clean(node);
 							traverse(nextNode);
 						}
 						//loop back
-						else if(Edgetimes.get(next)>Edgesize.get(next)) {
+						else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 							if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 								Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+								while(loop.contains(nextnext)) {
+									nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+								}
 								nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 								//clean(node);
 								if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -620,9 +639,12 @@ public class StaticAnalysis  {
 									traverse(nextNode);
 								}
 								//loop back
-								else if(Edgetimes.get(next)>Edgesize.get(next)) {
+								else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 									if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+										while(loop.contains(nextnext)) {
+											nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+										}
 										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 										//clean(node);
 										if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -665,9 +687,12 @@ public class StaticAnalysis  {
 										traverse(nextNode);
 									}
 									//loop back
-									else if(Edgetimes.get(next)>Edgesize.get(next)) {
+									else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+											while(loop.contains(nextnext)) {
+												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+											}
 											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 											//clean(node);
 											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -698,9 +723,12 @@ public class StaticAnalysis  {
 										traverse(nextNode);
 									}
 									//loop back
-									else if(Edgetimes.get(next)>Edgesize.get(next)) {
+									else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+											while(loop.contains(nextnext)) {
+												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+											}
 											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 											//clean(node);
 											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -791,9 +819,12 @@ public class StaticAnalysis  {
 											traverse(nextNode);
 										}
 										//loop back
-										else if(Edgetimes.get(next)>Edgesize.get(next)) {
+										else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 											if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 												Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+												while(loop.contains(nextnext)) {
+													nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+												}
 												nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 												//clean(node);
 												if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -869,9 +900,12 @@ public class StaticAnalysis  {
 										traverse(nextNode);
 									}
 									//loop back
-									else if(Edgetimes.get(next)>Edgesize.get(next)) {
+									else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+											while(loop.contains(nextnext)) {
+												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+											}
 											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 											//clean(node);
 											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -913,9 +947,12 @@ public class StaticAnalysis  {
 										traverse(nextNode);
 									}
 									//loop back
-									else if(Edgetimes.get(next)>Edgesize.get(next)) {
+									else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+											while(loop.contains(nextnext)) {
+												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+											}
 											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 											//clean(node);
 											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -963,9 +1000,12 @@ public class StaticAnalysis  {
 										traverse(ID2Node.get(next));
 									}
 									//loop back
-									else if(Edgetimes.get(next)>Edgesize.get(next)) {
+									else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+											while(loop.contains(nextnext)) {
+												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+											}
 											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 											//clean(node);
 											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -994,9 +1034,12 @@ public class StaticAnalysis  {
 										traverse(ID2Node.get(next));
 									}
 									//loop back
-									else if(Edgetimes.get(next)>Edgesize.get(next)) {
+									else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+											while(loop.contains(nextnext)) {
+												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+											}
 											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 											//clean(node);
 											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -1079,9 +1122,12 @@ public class StaticAnalysis  {
 											traverse(ID2Node.get(next));
 										}
 										//loop back
-										else if(Edgetimes.get(next)>Edgesize.get(next)) {
+										else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 											if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 												Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+												while(loop.contains(nextnext)) {
+													nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+												}
 												nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 												//clean(node);
 												if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -1147,9 +1193,12 @@ public class StaticAnalysis  {
 									traverse(ID2Node.get(next));
 								}
 								//loop back
-								else if(Edgetimes.get(next)>Edgesize.get(next)) {
+								else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 									if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+										while(loop.contains(nextnext)) {
+											nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+										}
 										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 										//clean(node);
 										if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -1177,17 +1226,22 @@ public class StaticAnalysis  {
 									traverse(ID2Node.get(next));
 								}
 								//loop back
-								else if(Edgetimes.get(next)>Edgesize.get(next)) {
+								else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 									if(CSVCFGExporter.cfgSave.get(next).size()>1) {
-										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
-										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-										//clean(node);
-										if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
-											traverse(nextNode);
+										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+											while(loop.contains(nextnext)) {
+												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+											}
+											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
+											//clean(node);
+											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
+												traverse(nextNode);
+											}
 										}
-									}
-									else {
-										System.out.println("Error: "+next);
+										else {
+											System.out.println("Error: "+next);
+										}
 									}
 								}
 							}
@@ -1236,9 +1290,12 @@ public class StaticAnalysis  {
 									traverse(ID2Node.get(next));
 								}
 								//loop back
-								else if(Edgetimes.get(next)>Edgesize.get(next)) {
+								else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 									if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+										while(loop.contains(nextnext)) {
+											nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+										}
 										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 										//clean(node);
 										if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -1279,9 +1336,12 @@ public class StaticAnalysis  {
 									traverse(ID2Node.get(next));
 								}
 								//loop back
-								else if(Edgetimes.get(next)>Edgesize.get(next)) {
+								else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
 									if(CSVCFGExporter.cfgSave.get(next).size()>1) {
 										Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+										while(loop.contains(nextnext)) {
+											nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+										}
 										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
 										//clean(node);
 										if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
@@ -1306,17 +1366,19 @@ public class StaticAnalysis  {
 				return false;
 			}
 			
+			HashMap<String, Long> inter = node.inter;
 			Long caller = node.caller.peek();
 			//clean(callerNode);
 			if(clean.containsKey(stmt)) {
 				System.out.println("clean stmt: "+stmt);
 				for(Long intra: clean.get(stmt)) {
-					clean(ID2Node.get(intra));
+					if(ID2Node.containsKey(intra)) {
+						clean(ID2Node.get(intra));
+					}
 				}
 			}
 			if(ID2Node.containsKey(caller)) {
 				Node callerNode = ID2Node.get(caller);
-				HashMap<String, Long> inter = callerNode.inter;
 				Long callerID = ID2Node.get(caller).astId;
 				List<Long> nextStmts=CSVCFGExporter.cfgSave.get(callerID);
 				//next=CSVCFGExporter.cfgSave.get(next).get(0);
@@ -1476,6 +1538,19 @@ public class StaticAnalysis  {
 		if(ID2Node.containsKey(caller)) {
 			caller = ID2Node.get(caller).astId;
 		}
+		
+		ASTNode stmtnode = ASTUnderConstruction.idToNode.get(caller);
+		
+		if(stmtnode instanceof AssignmentExpression && ((AssignmentExpression) stmtnode).getRight() instanceof CallExpressionBase) {
+			CallExpressionBase callsite = (CallExpressionBase) ((AssignmentExpression) stmtnode).getRight();
+			caller = callsite.getNodeId();
+		}
+		
+		ASTNode stmtNode1 = ASTUnderConstruction.idToNode.get(caller);
+		if(!(stmtNode1 instanceof CallExpressionBase)) {
+			caller = (long) 0;
+		}
+			
 		HashMap<Long, Long> relatedNodes = new HashMap<Long, Long>();
 		
 		//check intro-data flow relationship
@@ -1712,6 +1787,9 @@ public class StaticAnalysis  {
 						CallExpressionBase callerNode = (CallExpressionBase) ASTUnderConstruction.idToNode.get(caller);
 						ArgumentList argList = (ArgumentList) callerNode.getArgumentList();
 						//get the i'th argument value
+						if(i>=argList.size()) {
+							break;
+						}
 						Expression arg = argList.getArgument(i);
 						if(arg.getProperty("type").equals("string")) {
 							propValue = arg.getEscapedCodeStr();
@@ -1784,6 +1862,7 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
 
 
