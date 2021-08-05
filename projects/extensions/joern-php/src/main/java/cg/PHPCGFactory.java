@@ -141,6 +141,10 @@ public class PHPCGFactory {
 	public static HashSet<String> bwlines = new HashSet<String>();
 	public static MultiHashMap<String, Long> path2callee = new MultiHashMap<String, Long>();
 	public static HashSet<String> entrypoint = new HashSet<String>();
+	public static HashSet<Long> allFunc = new HashSet<Long>();
+	public static HashSet<Long> allStaticMtd = new HashSet<Long>();
+	public static HashSet<Long> allMtd = new HashSet<Long>();
+	public static HashSet<Long> allConstructor = new HashSet<Long>();
 	
 	//public static Set<FunctionDef> constructSet = new HashSet<FunctionDef>();
 	/**
@@ -552,6 +556,7 @@ public class PHPCGFactory {
 						System.err.println("Unknown USORT: "+functionCall.getNodeId());
 					}
 				}
+				/*
 				else if(callIdentifier.getNameChild().getEscapedCodeStr().equals("call_user_func")
 						|| callIdentifier.getNameChild().getEscapedCodeStr().equals("call_user_func_array")
 						|| callIdentifier.getNameChild().getEscapedCodeStr().equals("spl_autoload_register")
@@ -656,7 +661,7 @@ public class PHPCGFactory {
 						}
 					}
 				}
-				
+				*/
 				
 				// if call identifier is fully qualified,
 				// just look for the function's definition right away
@@ -726,7 +731,11 @@ public class PHPCGFactory {
 			if(path2callee.containsKey(path)) {
 				//one line may call multiple target functions
 				//System.out.println("construct:" +path);
-				call2mtd.addAll(constructorCall.getNodeId(), path2callee.get(path));
+				for(Long target: path2callee.get(path)) {
+					if(allConstructor.contains(target)) {
+						call2mtd.add(constructorCall.getNodeId(), target);
+					}
+				}	
 				continue;
 			}
 			
@@ -873,8 +882,11 @@ public class PHPCGFactory {
 			String path = getDir(staticCall.getNodeId());
 			path=path+":"+staticCall.getLocation().startLine;
 			if(path2callee.containsKey(path)) {
-				//one line may call multiple target functions
-				call2mtd.addAll(staticCall.getNodeId(), path2callee.get(path));
+				for(Long target: path2callee.get(path)) {
+					if(allStaticMtd.contains(target)) {
+						call2mtd.add(staticCall.getNodeId(), target);
+					}
+				}	
 				continue;
 			}
 			
@@ -998,7 +1010,11 @@ public class PHPCGFactory {
 			if(path2callee.containsKey(path)) {
 				//one line may call multiple target functions
 				x5++;
-				call2mtd.addAll(methodCall.getNodeId(), path2callee.get(path));
+				for(Long target: path2callee.get(path)) {
+					if(allStaticMtd.contains(target) || allMtd.contains(target)) {
+						call2mtd.add(methodCall.getNodeId(), target);
+					}
+				}	
 				continue;
 			}
 			
@@ -1199,12 +1215,8 @@ public class PHPCGFactory {
 	private static boolean addCallEdgeIfDefinitionKnown(CG cg, MultiHashMap<String,? extends FunctionDef> defSet, CallExpressionBase functionCall, String functionKey, boolean prt2cld) {
 		
 		//We cannot get the full name of function call
-		int idx = 0;
 		if(functionKey.contains("-1::") || functionKey.contains("*")) {
 			//suspicious.add(functionCall.getNodeId());
-			if(functionKey.contains("*")) {
-				idx = functionKey.indexOf("*");
-			}
 			functionKey = functionKey.replace("*", "");
 			//we get nothing from the method/function call
 			if(functionKey.equals("-1::") || functionKey.equals("")) {
@@ -1506,6 +1518,8 @@ public class PHPCGFactory {
 		// it's a static method
 		else if( functionDef instanceof Method
 				&& functionDef.getFlags().contains(PHPCSVNodeTypes.FLAG_MODIFIER_STATIC)) {
+			
+			allStaticMtd.add(functionDef.getNodeId());
 			// get class Id
 			Long classId = getClsId(((Method)functionDef).getEnclosingClass(), functionDef.getEnclosingNamespace());
 			if(classId!=-1) {
@@ -1523,7 +1537,8 @@ public class PHPCGFactory {
 		else if( functionDef instanceof Method
 				&& (functionDef.getName().equals("__construct")
 						|| functionDef.getName().equals(((Method)functionDef).getEnclosingClass()))) {
-				
+			
+			allConstructor.add(functionDef.getNodeId());
 			// use A\B\C as key for the unique constructor of a class A\B\C
 			Long classId = getClsId(((Method)functionDef).getEnclosingClass(), functionDef.getEnclosingNamespace());
 			if(classId!=-1) {
@@ -1542,6 +1557,8 @@ public class PHPCGFactory {
 			// as that is usually not known at the call site (neither is the class name, except
 			// when the keyword $this is used)
 			//System.err.println("Function Def: "+((Method)functionDef).getEnclosingClass()+" "+functionDef.getNodeId());
+			allMtd.add(functionDef.getNodeId());
+			
 			Long classId = getClsId(((Method)functionDef).getEnclosingClass(), functionDef.getEnclosingNamespace());
 			if(classId!=-1) {
 				String methodKey = classId+"::"+functionDef.getName();
@@ -1555,6 +1572,7 @@ public class PHPCGFactory {
 		// it's a function (i.e., not inside a class)
 		else {
 			// use A\B\foo as key for a function foo() in namespace \A\B
+			allFunc.add(functionDef.getNodeId());
 			String functionKey = functionDef.getName();
 			if( !functionDef.getEnclosingNamespace().isEmpty())
 				functionKey = functionDef.getEnclosingNamespace() + "\\" + functionKey;
@@ -1704,6 +1722,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 
