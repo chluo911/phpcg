@@ -883,7 +883,7 @@ public class PHPCGFactory {
 			path=path+":"+staticCall.getLocation().startLine;
 			if(path2callee.containsKey(path)) {
 				for(Long target: path2callee.get(path)) {
-					if(allStaticMtd.contains(target)) {
+					if(allStaticMtd.contains(target) || allConstructor.contains(target)) {
 						call2mtd.add(staticCall.getNodeId(), target);
 					}
 				}	
@@ -1011,7 +1011,7 @@ public class PHPCGFactory {
 				//one line may call multiple target functions
 				x5++;
 				for(Long target: path2callee.get(path)) {
-					if(allStaticMtd.contains(target) || allMtd.contains(target)) {
+					if(allStaticMtd.contains(target) || allMtd.contains(target) || allConstructor.contains(target)) {
 						call2mtd.add(methodCall.getNodeId(), target);
 					}
 				}	
@@ -1722,6 +1722,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 

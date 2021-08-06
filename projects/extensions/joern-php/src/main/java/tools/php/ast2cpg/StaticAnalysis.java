@@ -20,6 +20,7 @@ import ast.functionDef.ParameterBase;
 import ast.functionDef.ParameterList;
 import ast.php.expressions.IncludeOrEvalExpression;
 import ast.php.functionDef.FunctionDef;
+import ast.php.functionDef.Method;
 import ast.php.functionDef.Parameter;
 import ast.php.functionDef.TopLevelFunctionDef;
 import ast.statements.jump.ReturnStatement;
@@ -308,7 +309,7 @@ public class StaticAnalysis  {
 			}
 		}
 		
-		//System.out.println("srcStnt: "+srcStmt);
+		System.out.println("srcStnt: "+sourceFunc);
 	}
 	
 	private void sourceFunc(Long src, Long funcId) {
@@ -1489,7 +1490,7 @@ public class StaticAnalysis  {
 						
 						ReturnStatement retNode = (ReturnStatement) ASTUnderConstruction.idToNode.get(node.astId);
 						ASTNode retValue = retNode.getReturnExpression();
-						if(retValue instanceof CallExpressionBase) {
+						if(retValue instanceof Method) {
 							Set<Long> validTarget = new HashSet<Long>(); 
 							List<Long> funcs = PHPCGFactory.call2mtd.get(retValue.getNodeId());
 							if(funcs==null || funcs.isEmpty()){
@@ -2360,15 +2361,5 @@ public class StaticAnalysis  {
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
 
 
