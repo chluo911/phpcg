@@ -884,6 +884,15 @@ public class PHPCGFactory {
 			if(path2callee.containsKey(path)) {
 				for(Long target: path2callee.get(path)) {
 					if(allStaticMtd.contains(target) || allConstructor.contains(target)) {
+						ASTNode targetFunc = ASTUnderConstruction.idToNode.get(target);
+						if( staticCall.getTargetFunc() instanceof StringExpression) {
+							StringExpression methodName = (StringExpression)staticCall.getTargetFunc();
+							String methodKey = methodName.getEscapedCodeStr();
+							//the target function has incorrect method name
+							if(!methodKey.equals(targetFunc.getEscapedCodeStr())) {
+								continue;
+							}
+						}
 						call2mtd.add(staticCall.getNodeId(), target);
 					}
 				}	
@@ -1012,6 +1021,15 @@ public class PHPCGFactory {
 				x5++;
 				for(Long target: path2callee.get(path)) {
 					if(allStaticMtd.contains(target) || allMtd.contains(target) || allConstructor.contains(target)) {
+						ASTNode targetFunc = ASTUnderConstruction.idToNode.get(target);
+						if( methodCall.getTargetFunc() instanceof StringExpression) {
+							StringExpression methodName = (StringExpression)methodCall.getTargetFunc();
+							String methodKey = methodName.getEscapedCodeStr();
+							//the target function has incorrect method name
+							if(!methodKey.equals(targetFunc.getEscapedCodeStr())) {
+								continue;
+							}
+						}
 						call2mtd.add(methodCall.getNodeId(), target);
 					}
 				}	
@@ -1227,14 +1245,20 @@ public class PHPCGFactory {
 			functionKey = functionKey.replace("-1::", "::");
 			String functionName = functionKey;
 			
-			//we take a conservative way
-			defSet.keySet().parallelStream().forEach(funcKey ->{
+			int thre = 0;
+			//defSet.keySet().parallelStream().forEach(funcKey ->{
+			for(String funcKey: defSet.keySet()) {
+				if(thre>5) {
+					break;
+				}
+				//candidate
 				if(funcKey.contains(functionName) && !funcKey.equals(functionName)) {
 					for(FunctionDef func: defSet.get(funcKey)){
 						addCallEdge(cg, functionCall, func, prt2cld);
+						thre++;
 					}
 				}
-			});
+			}
 		}
 		//the target function is a method and we get the full name of the method
 		else if(functionKey.indexOf("::")>0) {
@@ -1722,6 +1746,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 
