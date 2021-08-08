@@ -82,9 +82,7 @@ public class StaticAnalysis  {
 				continue;
 			}
 			//the file is included/required, so it is not the entry
-			if(allTargets.contains(entry)) {
-				continue;
-			}
+			
 			
 			Long stmt = CSVCFGExporter.cfgSave.get(entry+1).get(0);
 			Set<Long> intro = new HashSet<Long>();
@@ -342,6 +340,7 @@ public class StaticAnalysis  {
 		}
 		HashSet<Long> related = getAllcaller(func);
 		for(Long relate: related) {
+			//prop identity => function
 			name2Func.add(inter, relate);
 		}
 	}
@@ -653,7 +652,7 @@ public class StaticAnalysis  {
 						Long next = CSVCFGExporter.cfgSave.get(stmt).get(i);
 						Stack<Long> stack =(Stack<Long>) node.caller.clone();
 						//update context
-						nextNode = mergeNode(next, intra, newNode.inter, stack);
+						nextNode = mergeNode(next, newIntro, newNode.inter, stack);
 						//merge completed and traverse the next statement
 						if(Edgetimes.get(next)==Edgesize.get(next)) {
 							//clean(node);
@@ -950,6 +949,7 @@ public class StaticAnalysis  {
 										//find the key
 										if(key.equals(inter) || check(inter, key)==true) {
 											if(name2Func.get(key).contains(func)) {
+												System.out.println("name2Func: "+key+" "+name2Stmt.get(key)+" "+name2Func.get(key));
 												flag=true;
 												break;
 											}
@@ -968,7 +968,7 @@ public class StaticAnalysis  {
 										flag=true;
 									}
 									else {
-										System.err.println("not define source: "+func);
+										System.out.println("not define source: "+func);
 									}
 								}
 								
@@ -976,7 +976,7 @@ public class StaticAnalysis  {
 								HashMap<String, Long> inter=node.inter;
 								
 								//step into the function
-								if(flag==true && !unused.contains(func)) {
+								if(flag==true) {
 									active.put(func, true);
 									System.out.println("step into : "+func);
 									Long nextstmtId = CSVCFGExporter.cfgSave.get(funcNode.getNodeId()+1).get(0);
@@ -1496,6 +1496,7 @@ public class StaticAnalysis  {
 										//find the key
 										if(key.equals(interName) || check(interName, key)==true) {
 											if(name2Func.get(key).contains(func)) {
+												System.out.println("name2Func: "+key+" "+name2Stmt.get(key)+" "+name2Func.get(key));
 												flag=true;
 												break;
 											}
@@ -1519,7 +1520,7 @@ public class StaticAnalysis  {
 								}
 								
 								//the function is related, step into it
-								if(flag==true && !unused.contains(func)) {
+								if(flag==true) {
 									active.put(func, true);
 									System.out.println("step into : "+func);
 									Long nextstmtId = CSVCFGExporter.cfgSave.get(funcNode.getNodeId()+1).get(0);
@@ -1810,7 +1811,7 @@ public class StaticAnalysis  {
 									}
 									
 									//the function is related, we step into it
-									if(flag==true && !unused.contains(func)) {
+									if(flag==true) {
 										validTarget.add(func);
 									}
 									//else, go to the exit function
@@ -2205,6 +2206,23 @@ public class StaticAnalysis  {
 			}
 			active.put(funcID, false);
 			
+			//
+			if(sourceFunc.containsKey(node.astId-2)) {
+				Set<Long> oristmt = new HashSet<Long>(sourceFunc.get(node.astId-2));
+				Set<Long> crtstmt = new HashSet<Long>(node.intro);
+				for(Long st: node.inter.values()) {
+					crtstmt.add(st);
+				}
+				oristmt.retainAll(crtstmt);
+				
+				sourceFunc.remove(node.astId-2);
+				for(Long st: oristmt) {
+					sourceFunc.add(node.astId-2, st);
+				}
+				
+				System.out.println("change sourceFunc: "+(node.astId-2)+" "+oristmt);
+			}
+			
 			HashMap<String, Long> inter = node.inter;
 			Long caller = node.caller.peek();
 			//clean(callerNode);
@@ -2221,7 +2239,6 @@ public class StaticAnalysis  {
 				Node callerNode = ID2Node.get(caller);
 				//the function does not change taint status
 				
-				//the function does not change taint status
 				Long callerID = ID2Node.get(caller).astId;
 				List<Long> nextStmts=CSVCFGExporter.cfgSave.get(callerID);
 				//next=CSVCFGExporter.cfgSave.get(next).get(0);

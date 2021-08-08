@@ -475,7 +475,31 @@ public class PHPCGFactory {
 			path=path+":"+functionCall.getLocation().startLine;
 			if(path2callee.containsKey(path)) {
 				//one line may call multiple target functions
-				call2mtd.addAll(functionCall.getNodeId(), path2callee.get(path));
+				if( functionCall.getTargetFunc() instanceof Identifier) {
+					Identifier callIdentifier = (Identifier)functionCall.getTargetFunc();
+					if(callIdentifier.getNameChild().getEscapedCodeStr().equals("call_user_func")
+						|| callIdentifier.getNameChild().getEscapedCodeStr().equals("call_user_func_array")
+						|| callIdentifier.getNameChild().getEscapedCodeStr().equals("spl_autoload_register")
+						|| callIdentifier.getNameChild().getEscapedCodeStr().equals("spl_autoload_unregister")) {
+						call2mtd.addAll(functionCall.getNodeId(), path2callee.get(path));
+					}
+					else {
+						for(Long target: path2callee.get(path)) {
+							ASTNode targetFunc = ASTUnderConstruction.idToNode.get(target);
+							String funKey = targetFunc.getEscapedCodeStr();
+							if(allFunc.contains(target) && callIdentifier.getNameChild().getEscapedCodeStr().equals(funKey)){
+								call2mtd.add(functionCall.getNodeId(), target);
+							}
+						}
+					}
+				}
+				else {
+					for(Long target: path2callee.get(path)) {
+						if(allFunc.contains(target)){
+							call2mtd.add(functionCall.getNodeId(), target);
+						}
+					}
+				}
 				continue;
 			}
 			
