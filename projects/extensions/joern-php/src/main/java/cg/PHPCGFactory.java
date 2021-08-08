@@ -204,8 +204,9 @@ public class PHPCGFactory {
 		    	    	   target = target.replace("()", "");
 		    	    	   String path = words[5].replace("/var/www/html/", "/home/users/chluo/goal/");
 		    	    	   //main functon
-		    	    	   if(target.equals("{main}()")) {
+		    	    	   if(target.equals("{main}")) {
 		    	    		   String entry = path.substring(0, path.indexOf(":"));
+		    	    		   entry = "<"+entry+">";
 		    	    		   entrypoint.add(entry);
 		    	    	   }
 		    	    	   //require or include
@@ -919,6 +920,16 @@ public class PHPCGFactory {
 						}
 						call2mtd.add(staticCall.getNodeId(), target);
 					}
+					//only parent, self, static call calls non-static method
+					else if( staticCall.getTargetClass() instanceof Identifier) {
+						Identifier classIdentifier = (Identifier)staticCall.getTargetClass();
+						if(classIdentifier.getNameChild().getEscapedCodeStr().equals("parent") ||
+								classIdentifier.getNameChild().getEscapedCodeStr().equals("self") ||
+								classIdentifier.getNameChild().getEscapedCodeStr().equals("static")) {
+							call2mtd.add(staticCall.getNodeId(), target);
+						}
+					}
+							
 				}	
 				continue;
 			}
@@ -1770,6 +1781,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 
