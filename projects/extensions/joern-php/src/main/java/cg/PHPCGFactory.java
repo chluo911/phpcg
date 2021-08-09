@@ -926,6 +926,15 @@ public class PHPCGFactory {
 						if(classIdentifier.getNameChild().getEscapedCodeStr().equals("parent") ||
 								classIdentifier.getNameChild().getEscapedCodeStr().equals("self") ||
 								classIdentifier.getNameChild().getEscapedCodeStr().equals("static")) {
+							ASTNode targetFunc = ASTUnderConstruction.idToNode.get(target);
+							if( staticCall.getTargetFunc() instanceof StringExpression) {
+								StringExpression methodName = (StringExpression)staticCall.getTargetFunc();
+								String methodKey = methodName.getEscapedCodeStr();
+								//the target function has incorrect method name
+								if(!methodKey.equals(targetFunc.getEscapedCodeStr())) {
+									continue;
+								}
+							}
 							call2mtd.add(staticCall.getNodeId(), target);
 						}
 					}
@@ -1781,6 +1790,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 
