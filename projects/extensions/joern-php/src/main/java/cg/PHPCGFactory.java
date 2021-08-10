@@ -180,7 +180,7 @@ public class PHPCGFactory {
 
 	private static void createSpiderEdges(CG cg) {
 		
-		File profile = new File("/data/xdebug/joomla/");
+		File profile = new File("/data/xdebug/oscommerce/");
 		File[] files = profile.listFiles();
 		if (files != null) {
 		    for (File file : files) {
@@ -208,7 +208,7 @@ public class PHPCGFactory {
 		    	    		   String entry = path.substring(0, path.indexOf(":"));
 		    	    		   entry = "<"+entry+">";
 		    	    		   entrypoint.add(entry);
-		    	    	   }
+ 		    	    	   }
 		    	    	   //require or include
 		    	    	   if(target.startsWith("include(") || target.startsWith("require(") ||
 		    	    			   target.startsWith("require_once(") || target.startsWith("include_once(")) {
@@ -511,12 +511,21 @@ public class PHPCGFactory {
 				
 				//collect sinks
 				//SQL injection sinks
+				/*
 				if(callIdentifier.getNameChild().getEscapedCodeStr().equals("mysql_query") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("mysqli_query") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("pg_query") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("sqlite_query")) {
-					ASTNode firstArg = functionCall.getArgumentList().getArgument(0);
-					sinks.add(firstArg.getNodeId());
+					sinks.add(functionCall.getNodeId());
+				}*/
+				if(callIdentifier.getNameChild().getEscapedCodeStr().equals("echo") ||
+						callIdentifier.getNameChild().getEscapedCodeStr().equals("print") ||
+						callIdentifier.getNameChild().getEscapedCodeStr().equals("print_r") ||
+						callIdentifier.getNameChild().getEscapedCodeStr().equals("printf") ||
+						callIdentifier.getNameChild().getEscapedCodeStr().equals("exit") ||
+						callIdentifier.getNameChild().getEscapedCodeStr().equals("die") ||
+						callIdentifier.getNameChild().getEscapedCodeStr().equals("vprintf")) {
+					sinks.add(functionCall.getNodeId());
 				}
 				
 				//we ignore test files
@@ -1484,7 +1493,7 @@ public class PHPCGFactory {
 				save.addAll(caller, callees);
 				continue;
 			}
-			System.err.println("caller: "+caller);
+			//System.err.println("caller: "+caller);
 			MultiHashMap<Integer, Long> tmp = new MultiHashMap<Integer, Long>();
 			for(Long callee: callees) {
 				ASTNode calleeNode = ASTUnderConstruction.idToNode.get(callee);
@@ -1499,22 +1508,29 @@ public class PHPCGFactory {
 			for(int i=0; i<lKeys.size()&&i<5; i++) {
 				Integer close = lKeys.get(i);
 				List<Long> target = tmp.get(close);
-				System.err.println("Close: "+close+" "+caller+target);
+				//System.err.println("Close: "+close+" "+caller+target);
 				save.addAll(caller, target);
 			}
 		}
 		
-		call2mtd=save;
+		call2mtd=save;	
+		//System.out.println("reset: "+call2mtd);
 		
 		for(Long caller: call2mtd.keySet()) {
 			i2=Math.max(i2, call2mtd.get(caller).size());
 			Long callFunc = ASTUnderConstruction.idToNode.get(caller).getFuncId();
 			for(Long mtd: call2mtd.get(caller)) {
-				CGNode callerNode = new CGNode(ASTUnderConstruction.idToNode.get(caller));
-				CGNode calleeNode = new CGNode((FunctionDefBase) ASTUnderConstruction.idToNode.get(mtd));
+				CGNode callerNode = null;
+				if(ASTUnderConstruction.idToNode.get(caller) instanceof CallExpressionBase) {
+					callerNode = new CGNode((CallExpressionBase) ASTUnderConstruction.idToNode.get(caller));
+				}
+				else if(ASTUnderConstruction.idToNode.get(caller) instanceof IncludeOrEvalExpression) {
+					callerNode = new CGNode((IncludeOrEvalExpression) ASTUnderConstruction.idToNode.get(caller));
+				}
+				CGNode calleeNode = new CGNode((FunctionDef) ASTUnderConstruction.idToNode.get(mtd));
 				mtd2call.add(mtd, caller);
 				mtd2mtd.add(callFunc, mtd);
-				callee2caller.add(mtd, callFunc);
+				callee2caller.add(mtd, caller);
 				cg.addVertex(callerNode);
 				cg.addVertex(calleeNode);
 				cg.addEdge(new CGEdge(callerNode, calleeNode));
@@ -1790,15 +1806,6 @@ public class PHPCGFactory {
 	}
 	
 }
-
-
-
-
-
-
-
-
-
 
 
 

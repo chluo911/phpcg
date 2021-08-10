@@ -1,50 +1,76 @@
-package tools.php.ast2cpg;
+package cg;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
+import ast.ASTNode;
+import ast.expressions.CallExpressionBase;
+import ast.functionDef.FunctionDefBase;
+import ast.php.expressions.IncludeOrEvalExpression;
+import ast.php.functionDef.FunctionDef;
 
-import misc.MultiHashMap;
-
-public class Node {
-	public List<Node> children = null;
-	public HashMap<String, Long> inter = new HashMap<String, Long>();
-	public Set<Long> intro = new HashSet<Long>();
-	public Long astId = null;
-	//public Long nodeId = null;
-	public Stack<Long> caller = null;
-	public Long parent = null;
+/**
+ *  A CGNode is a container for either a call expression (caller) or a function definition (callee).
+ */
+public class CGNode {
 	
-	
-	//the id and identity of the AST Node 
-	public Node(Long astId, HashMap<String, Long> inter, Set<Long> intro, Stack<Long> caller) {
-		//the node ID
-		//this.nodeId=nodeId;
-		//current stmt ID
-		this.astId=astId; //the ASTID of this statement 
-		//previous taint state
-		this.inter=inter; //the related inter variables identities and where they are assigned
-		this.intro=intro; //the related intro statememt within the function
-		this.caller=caller; //the caller of the statement, represented using its node ID
-		this.children=new ArrayList<>();
-		StaticAnalysis.ID2Node.put(astId, this);
+	private ASTNode astNode;
+	private boolean isCallee;
+
+	public CGNode( FunctionDef node) {
+		init( node);
+		setIsCallee( true);
 	}
 	
-	public Node (Node node) {
-		//this.nodeId=node.nodeId;
-		this.astId=node.astId;
-		this.inter=node.inter;
-		this.intro=node.intro;
-		this.caller=node.caller;
-		this.children=node.children;
+	public CGNode( CallExpressionBase node) {
+		init( node);
+		setIsCallee( false);
 	}
 	
-	public void addChild(Node child) {
-		//children.add(child);
-		child.parent=this.astId;
+	public CGNode( IncludeOrEvalExpression node) {
+		init( node);
+		setIsCallee( false);
+	}
+	
+	private void init( ASTNode node) {
+
+		if( null == node)
+			throw new IllegalArgumentException( "Cannot construct a CGNode with a null node.");
+
+		setASTNode( node);
+	}
+
+	private void setASTNode( ASTNode astNode) {
+		this.astNode = astNode;
+	}
+
+	public ASTNode getASTNode()	{
+		return this.astNode;
+	}
+
+	private void setIsCallee( boolean isCallee) {
+		this.isCallee = isCallee;
+	}
+
+	public boolean isCallee() {
+		return this.isCallee;
+	}
+	
+	public String getEscapedCodeStr() {
+		return getASTNode().getEscapedCodeStr();
+	}
+
+	@Override
+	public int hashCode() {
+		return getASTNode().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if( o instanceof CGNode)
+			return getASTNode().equals( ((CGNode)o).getASTNode());
+		return false;
+	}
+	
+	@Override
+	public String toString() {
+		return getASTNode().toString();
 	}
 }
-
