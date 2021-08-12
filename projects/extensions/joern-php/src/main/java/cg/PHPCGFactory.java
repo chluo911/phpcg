@@ -511,13 +511,13 @@ public class PHPCGFactory {
 				
 				//collect sinks
 				//SQL injection sinks
-				/*
+				
 				if(callIdentifier.getNameChild().getEscapedCodeStr().equals("mysql_query") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("mysqli_query") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("pg_query") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("sqlite_query")) {
 					sinks.add(functionCall.getNodeId());
-				}*/
+				}/*
 				if(callIdentifier.getNameChild().getEscapedCodeStr().equals("echo") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("print") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("print_r") ||
@@ -526,7 +526,7 @@ public class PHPCGFactory {
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("die") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("vprintf")) {
 					sinks.add(functionCall.getNodeId());
-				}
+				}*/
 				
 				//we ignore test files
 				if(filterTest(callIdentifier.getNameChild().getEscapedCodeStr())) {
@@ -1806,6 +1806,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 

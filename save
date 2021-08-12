@@ -53,3 +53,13 @@ exisitng taint analysis, how they evaluate
 limitation of implementation, static multiple dynamic one
 important: high fp
 difficult: analysze each statement, engieering effort, degrade performace.
+
+918326,
+
+ /var/www/html/webchess/chessdb.php false negative
+
+ not only sink, but data flow
+
+ taint used in security sensitive function:
+ 1. taint is a parameter of function call and the function does not call sanitizer
+

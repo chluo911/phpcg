@@ -678,6 +678,7 @@ public class StaticAnalysis  {
 					//the source is used in call expression
 					List<Long> srcs = srcStmt.get(stmt);
 					boolean isarg = true;
+					boolean flag = false;
 					for(Long src: srcs) {
 						Long argList = isArg(src, stmt);
 						//source is used as argument
@@ -691,60 +692,7 @@ public class StaticAnalysis  {
 								vulStmts.add(node.astId, tmp);
 								return false;
 							}
-							//the sourcs is santizized
-							else {
-								System.out.println("source is sanitized "+node.astId);
-								for(int i=0; i<CSVCFGExporter.cfgSave.get(stmt).size(); i++) {
-									Long next = CSVCFGExporter.cfgSave.get(stmt).get(i);
-									Stack<Long> stack =(Stack<Long>) node.caller.clone();
-									//update context
-									nextNode = mergeNode(next, node.intro, node.inter, stack);
-									//merge completed and traverse the next statement
-									if(Edgetimes.get(next)==Edgesize.get(next)) {
-										//clean(node);
-										traverse(nextNode);
-									}
-									//loop back
-									else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
-										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
-											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
-											while(loop.contains(nextnext)) {
-												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
-											}
-											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-											//clean(node);
-											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
-												traverse(nextNode);
-											}
-										}
-										else if(forloop.contains(next)){
-											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(0);
-											while(loop.contains(nextnext)) {
-												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
-											}
-											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-											//clean(node);
-											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
-												traverse(nextNode);
-											}
-										}
-										else {
-											Long nextnext = ASTUnderConstruction.idToNode.get(next).getFuncId()+2;
-											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
-												traverse(nextNode);
-											}
-										}
-									}
-									else if(Edgetimes.get(next)>Edgesize.get(next) && ASTUnderConstruction.idToNode.containsKey(next)){
-										Long nextnext = ASTUnderConstruction.idToNode.get(next).getFuncId()+2;
-										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
-										if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
-											traverse(nextNode);
-										}
-									}
-								}
-							}
+							
 						}
 						else {
 							//add source
@@ -3099,6 +3047,7 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
 
 
