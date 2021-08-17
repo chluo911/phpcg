@@ -1,6 +1,7 @@
 package tools.php.ast2cpg;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 import ast.ASTNode;
@@ -110,12 +111,12 @@ import inputModules.csv.KeyedCSV.KeyedCSVRow;
 import inputModules.csv.KeyedCSV.exceptions.InvalidCSVFile;
 import inputModules.csv.csv2ast.ASTUnderConstruction;
 import inputModules.csv.csv2ast.CSVRowInterpreter;
-import misc.MultiHashMap;
 
 public class PHPCSVNodeInterpreter implements CSVRowInterpreter
 {
 	
 	public static HashMap<Long, String> filepath = new HashMap<Long, String>();
+	public static HashSet<Long> xsssinks= new HashSet<Long>();
 	
 	@Override
 	public long handle(KeyedCSVRow row, ASTUnderConstruction ast)
@@ -1133,6 +1134,8 @@ public class PHPCSVNodeInterpreter implements CSVRowInterpreter
 		long id = Long.parseLong(row.getFieldForKey(PHPCSVNodeTypes.NODE_ID));
 		ast.addNodeWithId(newNode, id);
 		newNode.setNodeId(id);
+		
+		xsssinks.add(id);
 
 		return id;
 	}
@@ -1513,6 +1516,8 @@ public class PHPCSVNodeInterpreter implements CSVRowInterpreter
 		long id = Long.parseLong(row.getFieldForKey(PHPCSVNodeTypes.NODE_ID));
 		ast.addNodeWithId(newNode, id);
 		newNode.setNodeId(id);
+		
+		xsssinks.add(id);
 
 		return id;
 	}
@@ -3060,4 +3065,3 @@ public class PHPCSVNodeInterpreter implements CSVRowInterpreter
 		return id;
 	}
 }
-

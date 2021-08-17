@@ -19,6 +19,7 @@ import ast.expressions.PropertyExpression;
 import ast.expressions.Variable;
 import ast.functionDef.ParameterBase;
 import ast.functionDef.ParameterList;
+import ast.php.expressions.ExitExpression;
 import ast.php.expressions.IncludeOrEvalExpression;
 import ast.php.expressions.MethodCallExpression;
 import ast.php.expressions.StaticCallExpression;
@@ -26,6 +27,7 @@ import ast.php.functionDef.FunctionDef;
 import ast.php.functionDef.Method;
 import ast.php.functionDef.Parameter;
 import ast.php.functionDef.TopLevelFunctionDef;
+import ast.php.statements.EchoStatement;
 import ast.statements.jump.ReturnStatement;
 import cg.PHPCGFactory;
 import cg.ParseVar;
@@ -73,6 +75,7 @@ public class StaticAnalysis  {
 	public static HashMap<Long, HashMap<String, Long>> removeInter = new HashMap<Long, HashMap<String, Long>>();
 	public static HashMap<Long, Boolean> addIntro = new HashMap<Long, Boolean>();
 	public static HashMap<Long, Stack<Long>> sum = new HashMap<Long, Stack<Long>>();
+	public static HashSet<Long> expList = new HashSet<Long>();
 	
 	public StaticAnalysis() {
 		init();
@@ -87,8 +90,8 @@ public class StaticAnalysis  {
 			ASTNode filename = ASTUnderConstruction.idToNode.get(entry);
 			//System.out.println("filename: "+filename.getEscapedCodeStr());
 			if(!PHPCGFactory.entrypoint.contains(filename.getEscapedCodeStr())) {
-				System.out.println("Included: "+filename.getEscapedCodeStr());
-				continue;
+				//System.out.println("Included: "+);
+				//continue;
 			}
 			if(CSVCFGExporter.cfgSave.get(entry+1)==null) {
 				continue;
@@ -215,6 +218,12 @@ public class StaticAnalysis  {
 			Long stmt = getStatement(sink);
 			sinks.add(stmt);
 		}
+		//for xss
+		for(Long sink: PHPCSVNodeInterpreter.xsssinks) {
+			Long stmt = getStatement(sink);
+			sinks.add(stmt);
+		}
+		System.out.println(sinks);
 		
 		//get the identity of the source class property and global variables
 		for(Long src: srcPropSet) {
@@ -244,6 +253,7 @@ public class StaticAnalysis  {
 				continue;
 			}
 			
+			
 			List<Long> vals = CSVCFGExporter.cfgSave.get(key);
 			int w = 1;
 			ASTNode stmtNode = ASTUnderConstruction.idToNode.get(key);
@@ -258,6 +268,11 @@ public class StaticAnalysis  {
 				
 			}
 			for(Long val: vals) {
+				//expList
+				if(ASTUnderConstruction.idToNode.containsKey(key) && ASTUnderConstruction.idToNode.get(key).getProperty("type").equals("AST_EXPR_LIST")) {
+					expList.add(val);
+				}
+				
 				//loop back
 				if(val<key && ASTUnderConstruction.idToNode.containsKey(val)) {
 					//the third element of for loop
@@ -313,6 +328,10 @@ public class StaticAnalysis  {
 			Edgesize.put(third, 0);
 		}
 		
+		for(Long exp: expList) {
+			Edgesize.put(exp, 1);
+		}
+		
 		savesize = (HashMap<Long, Integer>) Edgesize.clone();
 		
 		for(Long src: sources) {
@@ -331,8 +350,6 @@ public class StaticAnalysis  {
 		for(Long key: PHPCGFactory.call2mtd.keySet()) {
 			allTargets.addAll(PHPCGFactory.call2mtd.get(key));
 		}
-		Long test = (long) 727389;
-		System.out.println("srcStnt: "+sourceFunc.get(test));
 	}
 	
 	private void sourceFunc(Long src, Long funcId) {
@@ -678,7 +695,6 @@ public class StaticAnalysis  {
 					//the source is used in call expression
 					List<Long> srcs = srcStmt.get(stmt);
 					boolean isarg = true;
-					boolean flag = false;
 					for(Long src: srcs) {
 						Long argList = isArg(src, stmt);
 						//source is used as argument
@@ -692,7 +708,60 @@ public class StaticAnalysis  {
 								vulStmts.add(node.astId, tmp);
 								return false;
 							}
-							
+							//the sourcs is santizized
+							else {
+								System.out.println("source is sanitized "+node.astId);
+								for(int i=0; i<CSVCFGExporter.cfgSave.get(stmt).size(); i++) {
+									Long next = CSVCFGExporter.cfgSave.get(stmt).get(i);
+									Stack<Long> stack =(Stack<Long>) node.caller.clone();
+									//update context
+									nextNode = mergeNode(next, node.intro, node.inter, stack);
+									//merge completed and traverse the next statement
+									if(Edgetimes.get(next)==Edgesize.get(next)) {
+										//clean(node);
+										traverse(nextNode);
+									}
+									//loop back
+									else if(Edgetimes.get(next)>Edgesize.get(next) && loop.contains(next)) {
+										if(CSVCFGExporter.cfgSave.get(next).size()>1) {
+											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(1);
+											while(loop.contains(nextnext)) {
+												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+											}
+											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
+											//clean(node);
+											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
+												traverse(nextNode);
+											}
+										}
+										else if(forloop.contains(next)){
+											Long nextnext = CSVCFGExporter.cfgSave.get(next).get(0);
+											while(loop.contains(nextnext)) {
+												nextnext = CSVCFGExporter.cfgSave.get(nextnext).get(1);
+											}
+											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
+											//clean(node);
+											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
+												traverse(nextNode);
+											}
+										}
+										else {
+											Long nextnext = ASTUnderConstruction.idToNode.get(next).getFuncId()+2;
+											nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
+											if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
+												traverse(nextNode);
+											}
+										}
+									}
+									else if(Edgetimes.get(next)>Edgesize.get(next) && ASTUnderConstruction.idToNode.containsKey(next)){
+										Long nextnext = ASTUnderConstruction.idToNode.get(next).getFuncId()+2;
+										nextNode = mergeNode(nextnext, ID2Node.get(next).intro, ID2Node.get(next).inter, ID2Node.get(next).caller);
+										if(Edgetimes.get(nextnext)==Edgesize.get(nextnext)) {
+											traverse(nextNode);
+										}
+									}
+								}
+							}
 						}
 						else {
 							//add source
@@ -767,6 +836,7 @@ public class StaticAnalysis  {
 				}
 				else{
 					//if it reaches sink without sanitization, we save the vulnerable path and return.
+					System.out.println("related: "+related);
 					if(!related.isEmpty() && sinks.contains(stmt)) {
 						Stack<Long> tmp = (Stack<Long>) node.caller.clone();
 						vulStmts.add(node.astId, tmp);
@@ -2746,6 +2816,7 @@ public class StaticAnalysis  {
 			if(taint>stmt) {
 				continue;
 			}
+			
 			//check if the statement has intro-data flow relationship with taint variable
 			if(DDG.rels.containsKey(taint)) {
 				//get all the related statements of the taint
@@ -2787,6 +2858,14 @@ public class StaticAnalysis  {
 										}
 									}
 								}
+								else if(stmtNode instanceof EchoStatement) {
+									ASTNode target = ((EchoStatement) stmtNode).getEchoExpression();
+									relatedNodes.put(target.getNodeId(), nodeID);
+								}
+								else if(stmtNode instanceof ExitExpression) {
+									ASTNode target = ((ExitExpression) stmtNode).getExpression();
+									relatedNodes.put(target.getNodeId(), nodeID);
+								}
 								else if(stmtNode instanceof AssignmentExpression && ((AssignmentExpression) stmtNode).getRight() instanceof CallExpressionBase) {
 									String tag = tmp.getR();
 									ArgumentList args = ((CallExpressionBase) ((AssignmentExpression) stmtNode).getRight()).getArgumentList();
@@ -2805,6 +2884,9 @@ public class StaticAnalysis  {
 										relatedNodes.put(leftNode.getNodeId(), nodeID);
 									}
 									
+								}
+								if(relatedNodes.isEmpty()) {
+									relatedNodes.put(stmt, nodeID);
 								}
 							}
 						}
@@ -3047,7 +3129,6 @@ public class StaticAnalysis  {
 		}
 	}
 }
-
 
 
 
