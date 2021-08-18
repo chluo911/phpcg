@@ -761,10 +761,8 @@ public class ParseVar {
 
 
 					Expression classNode = ((NewExpression) ReturnValueNode).getTargetClass();
-
-
-
-					if(classNode.getProperty("type").equals("AST_NAME")) {
+				
+					if(classNode.getProperty("type")!=null && classNode.getProperty("type").equals("AST_NAME")) {
 
 
 
@@ -5019,6 +5017,7 @@ public class ParseVar {
 
 
 }
+
 
 
 

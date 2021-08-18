@@ -63,3 +63,4 @@ difficult: analysze each statement, engieering effort, degrade performace.
  taint used in security sensitive function:
  1. taint is a parameter of function call and the function does not call sanitizer
 
+

@@ -125,7 +125,7 @@ public class StaticAnalysis  {
 			Long stmt = getStatement(dim);
 			ASTNode stmtNode = ASTUnderConstruction.idToNode.get(stmt);
 			//it is in assignment
-			if(stmtNode instanceof AssignmentExpression) {
+			if(stmtNode instanceof AssignmentExpression && ((AssignmentExpression) stmtNode).getRight()!=null) {
 				Long rightHandId = ((AssignmentExpression) stmtNode).getRight().getNodeId();
 				Long leftHandId = ((AssignmentExpression) stmtNode).getLeft().getNodeId();
 				//the dim is in the right hand
@@ -218,11 +218,13 @@ public class StaticAnalysis  {
 			Long stmt = getStatement(sink);
 			sinks.add(stmt);
 		}
-		//for xss
+		//for xss only
+		/*
 		for(Long sink: PHPCSVNodeInterpreter.xsssinks) {
 			Long stmt = getStatement(sink);
 			sinks.add(stmt);
 		}
+		*/
 		System.out.println(sinks);
 		
 		//get the identity of the source class property and global variables
@@ -274,7 +276,7 @@ public class StaticAnalysis  {
 				}
 				
 				//loop back
-				if(val<key && ASTUnderConstruction.idToNode.containsKey(val)) {
+				if(val<key && ASTUnderConstruction.idToNode.containsKey(val) && CSVCFGExporter.cfgSave.containsKey(val)) {
 					//the third element of for loop
 					if(CSVCFGExporter.cfgSave.get(val).size()<2) {
 						if(CSVCFGExporter.cfgSave.get(val).size()==1) {
@@ -2885,10 +2887,10 @@ public class StaticAnalysis  {
 									}
 									
 								}
-								if(relatedNodes.isEmpty()) {
-									relatedNodes.put(stmt, nodeID);
-								}
 							}
+						}
+						if(relatedNodes.isEmpty()) {
+							relatedNodes.put(stmt, nodeID);
 						}
 					}
 				}
@@ -3129,6 +3131,7 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
 
 

@@ -180,7 +180,7 @@ public class PHPCGFactory {
 
 	private static void createSpiderEdges(CG cg) {
 		
-		File profile = new File("/data/xdebug/oscommerce/");
+		File profile = new File("/data/xdebug/phpBB/");
 		File[] files = profile.listFiles();
 		if (files != null) {
 		    for (File file : files) {
@@ -517,7 +517,8 @@ public class PHPCGFactory {
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("pg_query") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("sqlite_query")) {
 					sinks.add(functionCall.getNodeId());
-				}/*
+				}
+				/*
 				if(callIdentifier.getNameChild().getEscapedCodeStr().equals("echo") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("print") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("print_r") ||
@@ -526,8 +527,8 @@ public class PHPCGFactory {
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("die") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("vprintf")) {
 					sinks.add(functionCall.getNodeId());
-				}*/
-				
+				}
+				*/
 				//we ignore test files
 				if(filterTest(callIdentifier.getNameChild().getEscapedCodeStr())) {
 					continue;
@@ -1806,6 +1807,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 

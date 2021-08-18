@@ -1,5 +1,5 @@
-#../php-cs-fixer fix --rules=@PSR2 ../goal/zencart-1.5.5
-#../phpjoern/php2ast /home/users/chluo/goal/zencart-1.5.5 
+../php-cs-fixer fix --rules=@PSR2 ../goal/zencart-1.5.5
+../phpjoern/php2ast /home/users/chluo/goal/zencart-1.5.5 
 javac -cp ./bin projects/extensions/joern-php/src/main/java/tools/php/ast2cpg/StaticAnalysis.java
 rm ./bin/tools/php/ast2cpg/StaticAnalysis.class
 mv projects/extensions/joern-php/src/main/java/tools/php/ast2cpg/StaticAnalysis.class ./bin/tools/php/ast2cpg/StaticAnalysis.class
