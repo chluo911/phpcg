@@ -180,7 +180,7 @@ public class PHPCGFactory {
 
 	private static void createSpiderEdges(CG cg) {
 		
-		File profile = new File("/data/xdebug/phpBB/");
+		File profile = new File("/data/xdebug/joomla");
 		File[] files = profile.listFiles();
 		if (files != null) {
 		    for (File file : files) {
@@ -197,7 +197,7 @@ public class PHPCGFactory {
 		    	    	   continue;
 		    	       }
 		    	       bwlines.add(iden);
-		    	       //System.out.println("words "+iden);
+		    	       System.out.println("words "+iden);
 		    	       if(words.length==6) {
 		    	    	   String target = words[4];
 		    	    	   target = target.replace("/var/www/html/", "/home/users/chluo/goal/");
@@ -518,7 +518,7 @@ public class PHPCGFactory {
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("sqlite_query")) {
 					sinks.add(functionCall.getNodeId());
 				}
-				/*
+				
 				if(callIdentifier.getNameChild().getEscapedCodeStr().equals("echo") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("print") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("print_r") ||
@@ -528,7 +528,7 @@ public class PHPCGFactory {
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("vprintf")) {
 					sinks.add(functionCall.getNodeId());
 				}
-				*/
+				
 				//we ignore test files
 				if(filterTest(callIdentifier.getNameChild().getEscapedCodeStr())) {
 					continue;
@@ -1302,9 +1302,7 @@ public class PHPCGFactory {
 			int thre = 0;
 			//defSet.keySet().parallelStream().forEach(funcKey ->{
 			for(String funcKey: defSet.keySet()) {
-				if(thre>5) {
-					break;
-				}
+				
 				//candidate
 				if(funcKey.contains(functionName) && !funcKey.equals(functionName)) {
 					for(FunctionDef func: defSet.get(funcKey)){
@@ -1807,6 +1805,7 @@ public class PHPCGFactory {
 	}
 	
 }
+
 
 
 

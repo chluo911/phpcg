@@ -1,3 +1,4 @@
+../phpjoern/php2ast /home/users/chluo/goal/webchess
 javac -cp ./bin projects/extensions/joern-php/src/main/java/tools/php/ast2cpg/StaticAnalysis.java
 rm ./bin/tools/php/ast2cpg/StaticAnalysis.class
 mv projects/extensions/joern-php/src/main/java/tools/php/ast2cpg/StaticAnalysis.class ./bin/tools/php/ast2cpg/StaticAnalysis.class

@@ -1,4 +1,4 @@
-../php-cs-fixer fix --rules=@PSR2 ../goal/phpBB
+#../php-cs-fixer fix --rules=@PSR2 ../goal/phpBB
 ../phpjoern/php2ast /home/users/chluo/goal/phpBB
 javac -cp ./bin projects/extensions/joern-php/src/main/java/tools/php/ast2cpg/StaticAnalysis.java
 rm ./bin/tools/php/ast2cpg/StaticAnalysis.class

@@ -1,4 +1,4 @@
-../php-cs-fixer fix --rules=@PSR2 ../goal/oscommerce2-2.3.4.1
+#../php-cs-fixer fix --rules=@PSR2 ../goal/oscommerce2-2.3.4.1
 ../phpjoern/php2ast /home/users/chluo/goal/oscommerce2-2.3.4.1
 javac -cp ./bin projects/extensions/joern-php/src/main/java/tools/php/ast2cpg/StaticAnalysis.java
 rm ./bin/tools/php/ast2cpg/StaticAnalysis.class

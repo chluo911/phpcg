@@ -76,6 +76,7 @@ public class StaticAnalysis  {
 	public static HashMap<Long, Boolean> addIntro = new HashMap<Long, Boolean>();
 	public static HashMap<Long, Stack<Long>> sum = new HashMap<Long, Stack<Long>>();
 	public static HashSet<Long> expList = new HashSet<Long>();
+	public static HashMap<Long, String> dstDim = new HashMap<Long, String>();
 	
 	public StaticAnalysis() {
 		init();
@@ -90,7 +91,6 @@ public class StaticAnalysis  {
 			ASTNode filename = ASTUnderConstruction.idToNode.get(entry);
 			//System.out.println("filename: "+filename.getEscapedCodeStr());
 			if(!PHPCGFactory.entrypoint.contains(filename.getEscapedCodeStr())) {
-				//System.out.println("Included: "+);
 				//continue;
 			}
 			if(CSVCFGExporter.cfgSave.get(entry+1)==null) {
@@ -110,6 +110,8 @@ public class StaticAnalysis  {
 	void init() {
 		System.out.println("Entry point: "+PHPCGFactory.entrypoint);
 		//System.out.println("Call Graph "+PHPCGFactory.call2mtd);
+		
+		
 		//collect cfg node
 		cfgNode.addAll(CSVCFGExporter.cfgSave.keySet());
 		//set the sanitizer statement
@@ -122,6 +124,7 @@ public class StaticAnalysis  {
 		for(Long dim: PHPCSVEdgeInterpreter.dimVar) {
 			Long tmp=null, tmp1=null;
 			//get the statement of expression
+			ASTNode DIMNode = ASTUnderConstruction.idToNode.get(dim);
 			Long stmt = getStatement(dim);
 			ASTNode stmtNode = ASTUnderConstruction.idToNode.get(stmt);
 			//it is in assignment
@@ -135,6 +138,8 @@ public class StaticAnalysis  {
 				//the dim is assigned
 				else if(leftHandId.equals(dim)){
 					tmp1=dim;
+					String iden = getDIMIdentity(DIMNode);
+					dstDim.put(stmt, iden);
 				}
 			}
 			//it is a function call
@@ -219,12 +224,12 @@ public class StaticAnalysis  {
 			sinks.add(stmt);
 		}
 		//for xss only
-		/*
+		
 		for(Long sink: PHPCSVNodeInterpreter.xsssinks) {
 			Long stmt = getStatement(sink);
 			sinks.add(stmt);
 		}
-		*/
+		
 		System.out.println(sinks);
 		
 		//get the identity of the source class property and global variables
@@ -708,7 +713,8 @@ public class StaticAnalysis  {
 								System.out.println("source is used in sink "+node.astId);
 								Stack<Long> tmp = (Stack<Long>) node.caller.clone();
 								vulStmts.add(node.astId, tmp);
-								return false;
+								System.out.println("check: "+node.astId+" "+tmp);
+								break;
 							}
 							//the sourcs is santizized
 							else {
@@ -842,13 +848,13 @@ public class StaticAnalysis  {
 					if(!related.isEmpty() && sinks.contains(stmt)) {
 						Stack<Long> tmp = (Stack<Long>) node.caller.clone();
 						vulStmts.add(node.astId, tmp);
+						System.out.println("check: "+node.astId+" "+tmp);
 						//link the callee stmts related to return value to the caller
 						for(Long taint: related.keySet()) {
 							Long source = related.get(taint);
 							Node preNode = ID2Node.get(source);
 							addNode(preNode, node);
 						}
-						return false;
 					}
 					
 					//the stmt contains a function call
@@ -1179,7 +1185,7 @@ public class StaticAnalysis  {
 								HashMap<String, Long> inter=node.inter;
 								
 								//step into the function
-								if(flag==true) {
+								if(flag==true && node.caller.size()<9) {
 									active.put(func, true);
 									System.out.println("step into : "+func);
 									if(CSVCFGExporter.cfgSave.get(funcNode.getNodeId()+1)==null) {
@@ -1786,7 +1792,7 @@ public class StaticAnalysis  {
 								}
 								
 								//the function is related, step into it
-								if(flag==true) {
+								if(flag==true && node.caller.size()<9) {
 									active.put(func, true);
 									System.out.println("step into : "+func);
 									Long nextstmtId = CSVCFGExporter.cfgSave.get(funcNode.getNodeId()+1).get(0);
@@ -2818,6 +2824,25 @@ public class StaticAnalysis  {
 			if(taint>stmt) {
 				continue;
 			}
+			ASTNode taintNode = ASTUnderConstruction.idToNode.get(taint);
+			
+			//the dst dim variable is tainted
+			if(dstDim.containsKey(taint)) {
+				if(srcDim.containsKey(stmt)) {
+					List<Long> dims = srcDim.get(stmt);
+					for(Long dim: dims) {
+						ASTNode srcDimValue = ASTUnderConstruction.idToNode.get(dim);
+						String symbol2 = getDIMIdentity(srcDimValue);
+						//this srcdim in current statement is related to taint symbol
+						if(dstDim.get(taint).startsWith(symbol2) || symbol2.startsWith(dstDim.get(taint))) {
+							System.out.println("tainted DIM: "+stmt);
+							relatedNodes.put(dim, nodeID);
+						}
+					}
+					
+					
+				}
+			}
 			
 			//check if the statement has intro-data flow relationship with taint variable
 			if(DDG.rels.containsKey(taint)) {
@@ -2825,7 +2850,6 @@ public class StaticAnalysis  {
 				for(Pair<Long, String> tmp: DDG.rels.get(taint)) {
 					//the stmt has deta flow relationship with taint statement
 					if(tmp.getL().equals(stmt)) {
-						ASTNode taintNode = ASTUnderConstruction.idToNode.get(taint);
 						//the taint statement is a assignment
 						if(taintNode.getProperty("type").equals("AST_ASSIGN") || taintNode.getProperty("type").equals("AST_ASSIGN_OP") || taintNode.getProperty("type").equals("AST_ASSIGN_REF")) {
 							ASTNode leftValue = ((AssignmentExpression) taintNode).getLeft();
@@ -3097,6 +3121,9 @@ public class StaticAnalysis  {
 		Long constantId = node.getNodeId()+2;
 		String identity="";
 		while(true) {
+			if(!ASTUnderConstruction.idToNode.containsKey(constantId)) {
+				return "-1";
+			}
 			ASTNode constant = ASTUnderConstruction.idToNode.get(constantId);
 			if(constant.getEscapedCodeStr()==null || constant.getEscapedCodeStr().isEmpty()) {
 				break;
@@ -3131,6 +3158,7 @@ public class StaticAnalysis  {
 		}
 	}
 }
+
 
 
 
