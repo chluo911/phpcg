@@ -162,7 +162,7 @@ public class PHPCGFactory {
 		
 		init();
 		
-		createSpiderEdges(cg);
+		//createSpiderEdges(cg);
 		System.err.println("@");
 		createFunctionCallEdges(cg);
 		System.err.println("@@");
@@ -180,7 +180,7 @@ public class PHPCGFactory {
 
 	private static void createSpiderEdges(CG cg) {
 		
-		File profile = new File("/data/xdebug/joomla");
+		File profile = new File("/data/xdebug/wp");
 		File[] files = profile.listFiles();
 		if (files != null) {
 		    for (File file : files) {
@@ -512,6 +512,7 @@ public class PHPCGFactory {
 				//collect sinks
 				//SQL injection sinks
 				
+				/*
 				if(callIdentifier.getNameChild().getEscapedCodeStr().equals("mysql_query") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("mysqli_query") ||
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("pg_query") ||
@@ -528,6 +529,10 @@ public class PHPCGFactory {
 						callIdentifier.getNameChild().getEscapedCodeStr().equals("vprintf")) {
 					sinks.add(functionCall.getNodeId());
 				}
+				*/
+				
+				//add your sink here.
+				
 				
 				//we ignore test files
 				if(filterTest(callIdentifier.getNameChild().getEscapedCodeStr())) {
